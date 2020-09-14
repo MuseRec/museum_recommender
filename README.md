@@ -30,7 +30,8 @@ $ mysql -u root -p
 
 *Ask me via iMessage for the password! (don't want to put it on github)*
 
-*You already have MySQL installed, so start from this point*
+**You already have MySQL installed, so start from this point**
+
 We should probably delete the old database created when you first went through this tutorial. To do so, follow these commands (make sure you're logged into your MySQL instance):
 ```bash
 mysql> drop database muse_recsys_db;
