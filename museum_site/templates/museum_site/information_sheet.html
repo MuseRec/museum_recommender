@@ -1,0 +1,32 @@
+{% load crispy_forms_tags %}
+
+{% if not provided_consent %}
+    <div class="modal fade" id="form_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="form_modal_title">Participant Information Sheet</h5>
+                </div>
+                <div class="modal-body">
+                    <p>By providing consent, you allow data to collected on your interactions with the website.</p>
+                    <form method = "post">
+                        {% csrf_token %}
+                        {{ consent_form|crispy }}
+                        <input type = "submit" value = "Submit" class = "btn btn-primary" name = "information_sheet_form">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{% if not provided_consent %}
+    <script type = "text/javascript">
+        $(window).on('load', function() {
+            $('#form_modal').modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+        });
+    </script>
+{% endif %}

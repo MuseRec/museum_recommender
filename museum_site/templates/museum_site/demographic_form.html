@@ -1,0 +1,31 @@
+{% load crispy_forms_tags %}
+
+{% if provided_consent and load_demographic %}
+    <div class="modal fade" id="demo_form_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="demo_form_modal_title">Demographic Information</h5>
+                </div>
+                <div class="modal-body">
+                    <form method = "post">
+                        {% csrf_token %}
+                        {{ demographic_form|crispy }}
+                        <input type = "submit" value = "Submit" class = "btn btn-primary" name = "demographic_form">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{% if provided_consent and load_demographic %}
+    <script type = "text/javascript">
+        $(window).on('load', function() {
+            $('#demo_form_modal').modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+        });
+    </script>
+{% endif %}
