@@ -146,4 +146,4 @@ Once the database has been setup, you'll be able to run the web server (it's ext
 ```bash
 (museum_webapp) $ python manage.py runserver
 ```
-then navigate in your web browser to: http://127.0.0.1:8000/art/ you should be greeted with a consent + demographic questionnaire.
+then navigate in your web browser to: http://127.0.0.1:8000/ you should be greeted with a consent + demographic questionnaire.
