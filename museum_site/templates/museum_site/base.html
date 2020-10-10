@@ -27,10 +27,36 @@
                     <a class = "navbar-brand" 
                         id = "home-button"
                         onclick = "interaction_event('click', 'home-button', '{{ page_id }}', '{{ csrf_token }}');">
-                        Museum Collection
+                        RECollect - Collection Exporer
                     </a>
-                {% else %}
-                    <a class = "navbar-brand">Museum Collection</a>
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav mr-auto">
+                          <li class="nav-item active">
+                            <a class="nav-link" href="#">Home<span class="sr-only">(current)</span></a>
+                          </li>
+                          <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                              Collections
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                              <a class="dropdown-item" href="#">Manchester Art Gallery</a>
+                              <a class="dropdown-item" href="#">The Whitworth</a>
+                              <a class="dropdown-item" href="#">National Gallery London</a>
+                              <a class="dropdown-item" href="#">Smithsonian Institution</a>
+                              <div class="dropdown-divider"></div>
+                              <a class="dropdown-item" href="#">Explore them all!</a>
+                            </div>
+                          </li>
+                          <li class="nav-item active">
+                            <a class="nav-link" href="#">My Favourites<span class="sr-only">(current)</span></a>
+                        </ul>
+                        <form class="form-inline my-2 my-lg-0">
+                          <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                          <button class="btn btn-outline-secondary my-2 my-sm-0" type="submit">Search</button>
+                        </form>
+                      </div>
+                    {% else %}
+                    <a class = "navbar-brand">RECollect - Collection Exporer </a>
                 {% endif %}
             </nav>
         </div>
