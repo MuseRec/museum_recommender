@@ -27,7 +27,7 @@
                     <a class = "navbar-brand" 
                         id = "home-button"
                         onclick = "interaction_event('click', 'home-button', '{{ page_id }}', '{{ csrf_token }}');">
-                        RECollect - Collection Exporer
+                        RECollect - Collection Explorer
                     </a>
                     <div class="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul class="navbar-nav mr-auto">
@@ -51,16 +51,37 @@
                             <a class="nav-link" href="#">My Favourites<span class="sr-only">(current)</span></a>
                         </ul>
                         <form class="form-inline my-2 my-lg-0">
-                          <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                          <input class="form-control mr-sm-2" type="search" placeholder="Search Collections" aria-label="Search">
                           <button class="btn btn-outline-secondary my-2 my-sm-0" type="submit">Search</button>
                         </form>
                       </div>
                     {% else %}
+
                     <a class = "navbar-brand">RECollect - Collection Exporer </a>
                 {% endif %}
             </nav>
+            <ul class="list-unstyled">
+              <h5 class="mt-0 mb-1">Daily Pick</h5>
+                  This has been randomly chosen.
+              <li class="media">
+                <img class="mr-3" src="..." alt="Generic placeholder image">
+                <img class="mr-3" src="..." alt="Generic placeholder image">
+                <img class="mr-3" src="..." alt="Generic placeholder image">
+                <img class="mr-3" src="..." alt="Generic placeholder image">
+                <img class="mr-3" src="..." alt="Generic placeholder image">
+              </li>
+            
+              <h5 class="mt-0 mb-1">Artists</h5>
+              Choose artworks by artist.
+              <li class="media">
+                <img class="mr-3" src="..." alt="Generic placeholder image">
+                <img class="mr-3" src="..." alt="Generic placeholder image">
+                <img class="mr-3" src="..." alt="Generic placeholder image">
+                <img class="mr-3" src="..." alt="Generic placeholder image">
+                <img class="mr-3" src="..." alt="Generic placeholder image">
+              </li>
         </div>
-
+        
         {% block content %}{% endblock content %}
     </body>
 </html>
