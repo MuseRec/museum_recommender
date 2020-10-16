@@ -27,13 +27,10 @@
                     <a class = "navbar-brand" 
                         id = "home-button"
                         onclick = "interaction_event('click', 'home-button', '{{ page_id }}', '{{ csrf_token }}');">
-                        RECollect - Collection Explorer
+                        <img src="{% static 'img/MuseRecV2.png' %}" alt="">
                     </a>
                     <div class="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul class="navbar-nav mr-auto">
-                          <li class="nav-item active">
-                            <a class="nav-link" href="#">Home<span class="sr-only">(current)</span></a>
-                          </li>
                           <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                               Collections
@@ -41,8 +38,6 @@
                             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                               <a class="dropdown-item" href="#">Manchester Art Gallery</a>
                               <a class="dropdown-item" href="#">The Whitworth</a>
-                              <a class="dropdown-item" href="#">National Gallery London</a>
-                              <a class="dropdown-item" href="#">Smithsonian Institution</a>
                               <div class="dropdown-divider"></div>
                               <a class="dropdown-item" href="#">Explore them all!</a>
                             </div>
@@ -59,30 +54,10 @@
 
                     <a class = "navbar-brand">RECollect - Collection Exporer </a>
                 {% endif %}
-            </nav>
-            <h2>Daily Pick</h2>
-            <div class="container">
-              <div class="row">
-                <div class="col-md">
-                  <img src="..." alt="ARTWORK HERE">
-                </div>
-                <div class="col-md">
-                  <img src="..." alt="ARTWORK HERE">
-                </div>
-                <div class="col-md">
-                  <img src="..." alt="ARTWORK HERE">
-                </div>
-                <div class="col-md">
-                  <img src="..." alt="ARTWORK HERE">
-                </div>
-                <div class="col-md">
-                  <img src="..." alt="ARTWORK HERE">
-                </div>
-              </div>
-            </div>
-        </div>
+            </nav>        
+        {% block content %}
         
-        {% block content %}{% endblock content %}
+        {% endblock content %}
     </body>
 </html>
 
