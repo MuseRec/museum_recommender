@@ -49,7 +49,8 @@ class User(models.Model):
         """
             Overridden function to format the user when printing
         """
-        return f"id: {self.user_id}, contact_outcome: {self.contact_outcome}, created: {self.user_created}"
+        return f"id: {self.user_id}, contact_outcome: {self.contact_outcome}, " + \
+            f"created: {self.user_created}"
 
 class UserDemographic(models.Model):
     """
@@ -65,4 +66,5 @@ class UserDemographic(models.Model):
     submission_timestamp = models.DateTimeField()
 
     def __str__(self):
-        return f"{user} demographics: [{age}, {gender}, {education}, {work}]"
+        return f"{self.user} demographics: [{self.age}, {self.gender}, {self.education}, " +  \
+                f"{self.work}]"
