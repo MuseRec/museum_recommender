@@ -22,7 +22,7 @@ def index(request):
         
         consent_form = UserForm()
         return render(request, 'museum_site/index.html', {
-            'provided_consent': True, 'consent_form': consent_form,
+            'provided_consent': False, 'consent_form': consent_form,
         })
 
 def handle_information_sheet_post(request):

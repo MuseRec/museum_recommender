@@ -3,7 +3,7 @@ from django.utils import timezone
 
 from museum_site.models import User, UserDemographic
 
-class UserTestCase(TestCase):
+class UserTest(TestCase):
     def setUp(self) -> None:
         User.objects.create(
             # user id would normally be a uuid 
@@ -38,3 +38,11 @@ class UserDemographicTest(TestCase):
         self.assertEqual(test_demo.gender, 'male')
         self.assertEqual(test_demo.education, 'masters')
         self.assertEqual(test_demo.work, 'employed')
+
+    def test_user_delete_cascade(self):
+        # delete the user object from the database
+        User.objects.get(user_id = 'user_1234').delete()
+        self.assertFalse(User.objects.filter(user_id = 'user_1234').exists())
+
+        # assert that the user doesn't exists in the demographic database
+        self.assertFalse(UserDemographic.objects.filter(user_id = 'user_1234').exists())
