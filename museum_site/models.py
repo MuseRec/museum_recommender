@@ -68,3 +68,16 @@ class UserDemographic(models.Model):
     def __str__(self):
         return f"{self.user} demographics: [{self.age}, {self.gender}, {self.education}, " +  \
                 f"{self.work}]"
+
+class Artwork(models.Model):
+    """
+
+    """
+    art_id = models.CharField(max_length = 64, primary_key = True)
+    title = models.CharField(max_length = 1024, null = True)
+    artist = models.CharField(max_length = 1024, null = True)
+    img_url = models.URLField(max_length = 512)
+    img_thumbnail_url = models.URLField(max_length = 512)
+    type_main = models.CharField(max_length = 64, null = True)
+    type_sub = models.CharField(max_length = 64, null = True)
+    date_range = models.CharField(max_length = 128, null = True)

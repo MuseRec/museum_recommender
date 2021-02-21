@@ -1,6 +1,11 @@
 .vscode/ 
 .env
 
+*.json 
+*.csv
+*.pickle 
+*.p 
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
