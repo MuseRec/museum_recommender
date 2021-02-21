@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.test.utils import tag
 from django.urls import reverse
 
 from museum_site.models import User, UserDemographic 
@@ -91,3 +92,23 @@ class HandleDemographicViewTest(TestCase):
         # ensure that the correct fields are being passed
         self.assertTrue(response.context['provided_consent'])
         self.assertEqual(response.context['page_id'], 'index')
+
+    def test_consent_form_is_not_bypassed(self):
+        # ensure that the consent form is returned if the user bypasses that step
+        # and gets to the demographic form - we need consent before data is collected.
+
+        # set the consent to false (forcing the else to be called in the view)
+        self.user.consent = False 
+        self.user.save()
+
+        post_data = {
+            'demographic_form': 'demographic_form', 'age': '21-29', 'gender': 'male',
+            'education': 'master', 'work': 'employed'
+        }
+        response = self.client.post(reverse('index'), data = post_data)
+        self.assertEqual(response.status_code, 200)
+
+        # check that the correct variablues are being returned
+        self.assertTrue(response.context['consent_required_before_demographic'])
+        self.assertFalse(response.context['provided_consent'])
+        self.assertIn('consent_form', response.context)

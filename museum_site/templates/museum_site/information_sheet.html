@@ -8,6 +8,9 @@
                     <h5 class="modal-title" id="form_modal_title">Participant Information Sheet</h5>
                 </div>
                 <div class="modal-body">
+                    {% if consent_required_before_demographic %}
+                        <p><b>Please provide consent before progressing to the next step</b></p>
+                    {% endif %}
                     <p>By providing consent, you allow data to collected on your interactions with the website.</p>
                     <form method = "post">
                         {% csrf_token %}

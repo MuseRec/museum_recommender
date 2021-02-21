@@ -13,7 +13,16 @@ def index(request):
         if 'information_sheet_form' in request.POST:
             return handle_information_sheet_post(request)
         elif 'demographic_form' in request.POST:
-            return handle_demographic_post(request)
+            # check that the user has provided consent in the prior step before
+            # progressing with collecting their data
+            if User.objects.get(user_id = request.session['user_id']).consent:
+                return handle_demographic_post(request)
+            else:
+                # if they haven't, then reload the page with the consent form
+                return render(request, 'museum_site/index.html', {
+                    'provided_consent': False, 'consent_form': UserForm(),
+                    'consent_required_before_demographic': True
+                })
     else:
         if 'user_id' in request.session:
             return render(request, 'museum_site/index.html', {
