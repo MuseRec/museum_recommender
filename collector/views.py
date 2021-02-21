@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils import timezone
 
@@ -17,15 +17,15 @@ def log(request):
             event = request.POST['event_type'],
             page = request.POST['page_id']
         )
-        print(interaction_event)
+        # print(interaction_event)
         interaction_event.save()
 
-        if request.POST['event_type'] == 'home-button':
+        if request.POST['content_id'] == 'home-button':
             return redirect('index')
         else:
             return HttpResponse('ok')
     else:
-        return HttpResponse('log only works with POST')
+        return HttpResponseBadRequest('log only works with POST')
 
 @ensure_csrf_cookie
 def page(request):

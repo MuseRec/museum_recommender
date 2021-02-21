@@ -1,7 +1,5 @@
 from django.db import models
 
-# Create your models here.
-
 AGE_CHOICES = [
     ('18-20', '18-20'), ('21-29', '21-29'), ('30-39', '30-39'), ('40-49', '40-49'),
     ('50-59', '50-59'), ('60+', '60+') 
@@ -19,8 +17,8 @@ EDU_CHOICES = [
 ]
 
 WORK_CHOICES = [
-    ('employed', 'Employed (full/part time or self)'), ('student', 'Student'), ('retired', 'Retired'),
-    ('unemployed', 'Unemployed')
+    ('employed', 'Employed (full/part time or self)'), ('student', 'Student'), 
+    ('retired', 'Retired'), ('unemployed', 'Unemployed')
 ]
 
 
@@ -57,6 +55,8 @@ class UserDemographic(models.Model):
         A model to represent demographic information about the users.
         We'll use the user_id field (from User) as a foreign key.
     """
+    # the user that the demographic information is associated with, when the user is deleted,
+    # so is their demographic information
     user = models.OneToOneField(User, on_delete = models.CASCADE, primary_key = True)
     age = models.CharField(max_length = 5, choices = AGE_CHOICES)
     gender = models.CharField(max_length = 9, choices = GENDER_CHOICES)

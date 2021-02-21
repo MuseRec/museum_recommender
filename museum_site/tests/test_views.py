@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 
-from museum_site.models import User 
+from museum_site.models import User, UserDemographic 
 
 class IndexGetTest(TestCase):
 
@@ -51,5 +51,43 @@ class HandleInformationSheetViewTest(TestCase):
         # check that the user_id has been put into the session
         self.assertEqual(self.client.session['user_id'], u.user_id)
 
+        # check that the response contains the demographic form
+        self.assertContains(response, 'demographic_form')
+        self.assertTrue(response.context['load_demographic'])
+        self.assertTrue(response.context['provided_consent'])
+
 class HandleDemographicViewTest(TestCase):
-    pass
+
+    def setUp(self) -> None:
+        # add the user to the session
+        response_post = self.client.post(reverse('index'), data = {
+            'information_sheet_form': 'information_sheet_form', 'email': 'test@email.com',
+            'consent': True, 'contact_outcome': True 
+        })
+        self.assertEqual(response_post.status_code, 200)
+        
+        self.user = User.objects.latest('user_created')
+    
+    def test_demographic_created(self):
+        post_data = {
+            'demographic_form': 'demographic_form', 'age': '21-29', 'gender': 'male',
+            'education': 'masters', 'work': 'employed'
+        }
+        response = self.client.post(reverse('index'), data = post_data)
+        self.assertEqual(response.status_code, 200)
+
+        # get the demographic object just created
+        d = UserDemographic.objects.latest('submission_timestamp')
+
+        # check that the fields are correct
+        self.assertEqual(d.age, '21-29')
+        self.assertEqual(d.gender, 'male')
+        self.assertEqual(d.education, 'masters')
+        self.assertEqual(d.work, 'employed')
+
+        # check that the correct user has been associated (fetched from the session)
+        self.assertEqual(d.user, self.user)
+
+        # ensure that the correct fields are being passed
+        self.assertTrue(response.context['provided_consent'])
+        self.assertEqual(response.context['page_id'], 'index')
