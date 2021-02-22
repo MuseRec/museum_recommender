@@ -46,3 +46,9 @@ class UserDemographicTest(TestCase):
 
         # assert that the user doesn't exists in the demographic database
         self.assertFalse(UserDemographic.objects.filter(user_id = 'user_1234').exists())
+
+class ArtworkTest(TestCase):
+    pass 
+
+class ArtworkVisitedTest(TestCase):
+    pass

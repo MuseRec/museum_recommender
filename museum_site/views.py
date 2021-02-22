@@ -81,3 +81,15 @@ def handle_demographic_post(request):
         return render(request, 'museum_site/index.html', {
             'provided_consent': True, 'page_id': 'index'
         })
+
+def handle_render_artwork_page(request):
+    pass 
+    """
+        function needs to:
+            - render the individual artwork page, passing all relevant variables
+            - record that the user has visited the page (ArtworkVisited model)
+            - include historical artworks? include seeing this because you've seen x, y, z?
+    """
+
+def handle_render_home_page(request):
+    pass 

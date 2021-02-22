@@ -71,7 +71,7 @@ class UserDemographic(models.Model):
 
 class Artwork(models.Model):
     """
-
+        A model for the artwork that forms the body of the work.
     """
     art_id = models.CharField(max_length = 64, primary_key = True)
     title = models.CharField(max_length = 1024, null = True)
@@ -81,3 +81,21 @@ class Artwork(models.Model):
     type_main = models.CharField(max_length = 64, null = True)
     type_sub = models.CharField(max_length = 64, null = True)
     date_range = models.CharField(max_length = 128, null = True)
+    date = models.CharField(max_length  = 128, null = True)
+    topic = models.JSONField(null = True) # topic - can have multiple elements
+    notes = models.JSONField(null = True) # description - can have multiple elements
+    culture = models.JSONField(null = True) # multiple elements are allowed.
+    role = models.CharField(max_length = 64, null = True)
+
+    def __str__(self):
+        return f"{self.art_id}"
+
+class ArtworkVisited(models.Model):
+    """
+    """
+    user = models.ForeignKey(User, on_delete = models.CASCADE)
+    art = models.ForeignKey(Artwork, on_delete = models.CASCADE)
+    timestamp = models.DateTimeField()
+
+    def __str__(self):
+        return f"User: {self.user.user_id}; Art: {self.art.art_id}; Timestamp: {self.timestamp}"

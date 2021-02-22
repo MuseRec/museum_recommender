@@ -1,11 +1,23 @@
-import json 
-
+import json
 from glob import glob
 
+# imports for adding data
+import os, sys 
+from dotenv import load_dotenv
+load_dotenv()
+
+sys.path.append('/museum_webapp')
+os.environ['DJANGO_SETTINGS_MODULE'] = 'museum_webapp.settings'
+
+import django 
+django.setup()
+
+from museum_site.models import Artwork
+
 def filter_out_errors(metadata):
-    missing_iids = set(json.load(open('../artwork_metadata/iids_missing_images.json', 'r')))
+    missing_iids = set(json.load(open('artwork_metadata/iids_missing_images.json', 'r')))
     unidentified_images = set(json.load(
-        open('../artwork_metadata/iids_unidentified_images.json', 'r')
+        open('artwork_metadata/iids_unidentified_images.json', 'r')
     ))
 
     for indx, meta in enumerate(metadata.copy()):
@@ -18,7 +30,7 @@ def include_urls(metadata):
     def _read_in_individual_files():
         """ Read in the individual raw metadata files """
         data = []
-        for f_name in glob('../artwork_metadata/SAAM_[0-9]*.json'):
+        for f_name in glob('artwork_metadata/SAAM_[0-9]*.json'):
             # read in the newline separated json file
             with open(f_name, 'r', encoding = 'UTF-8') as f_in:
                 for line in f_in:
@@ -28,7 +40,7 @@ def include_urls(metadata):
 
     raw_metadata = _read_in_individual_files()
     
-    # create an index mapping so we can update the existing parsed metadata to include URLs
+    # create an hash table so we can update the existing parsed metadata to include URLs
     iid_metadata_index_mapping = {meta['iid']: idx for idx, meta in enumerate(metadata)}
     for m_data in raw_metadata:
         iid = m_data['id']
@@ -43,6 +55,11 @@ def include_urls(metadata):
             metadata[iid_metadata_index_mapping[iid]].update({
                 'img_url': url, 'thumbnail_url': thumbnail_url
             })
+
+    # assert that every metadata has both urls
+    for m_data in metadata:
+        assert m_data['img_url'] is not None 
+        assert m_data['thumbnail_url'] is not None
 
     return metadata
 
@@ -122,10 +139,39 @@ def date_ranges_to_string(metadata):
     
     return metadata
 
+def remove_none_from_dates(metadata):
+    for idx, meta in enumerate(metadata.copy()):
+        if meta['date'] is None:
+            metadata[idx]['date'] = 'n.d.'
+    
+    return metadata
+
+def write_metadata_to_database(metadata):
+
+    for idx, meta in enumerate(metadata):
+        artwork = Artwork(
+            art_id = meta['iid'],
+            title = meta['title'],
+            artist = meta['name'],
+            img_url = meta['img_url'],
+            img_thumbnail_url = meta['thumbnail_url'],
+            type_main = meta['type_main'],
+            type_sub = meta['type_sub'],
+            date_range = meta['date_range'],
+            date = meta['date'],
+            topic = meta['topic'],
+            notes = meta['notes'],
+            culture = meta['culture'],
+            role = meta['role']
+        )
+        artwork.save()
+
+        if idx % 1000 == 0 and idx != 0:
+            print(f"{idx} artworks saved.")
 
 def main():
     # get the metadata
-    metadata = json.load(open('../artwork_metadata/SAAM_metadata.json', 'r'))
+    metadata = json.load(open('artwork_metadata/SAAM_metadata.json', 'r'))
 
     # filter out those were there are missing images or unidentified images
     metadata = filter_out_errors(metadata)
@@ -133,11 +179,17 @@ def main():
     # get the urls for the artworks
     metadata = include_urls(metadata)
 
+    # include the main type and the subtype (if there is one)
     metadata = include_type_and_subtype(metadata)
 
+    # covert the date ranges to a more readable string format
     metadata = date_ranges_to_string(metadata)
 
-    
+    # there are some NaN's in the date field, add a more descriptive string.
+    metadata = remove_none_from_dates(metadata)
+
+    write_metadata_to_database(metadata)
+
 
 if __name__ == '__main__':
     main()

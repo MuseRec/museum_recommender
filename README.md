@@ -147,3 +147,45 @@ Once the database has been setup, you'll be able to run the web server (it's ext
 (museum_webapp) $ python manage.py runserver
 ```
 then navigate in your web browser to: http://127.0.0.1:8000/ you should be greeted with a consent + demographic questionnaire.
+
+### Post-installation set-up
+
+There have been some changes to the models, so we need to include them in the database. Run the following
+command:
+
+```bash
+(venv) $ python manage.py migrate
+```
+
+If you get output similar to above (in the setting up the database section), then you've migrated
+the changes to the database successfully - you could double check this via your chosen DB GUI.
+
+**Data Population**
+
+To enable the web server to work, we need to populate the database with the artwork metadata. There's
+a script to make this easier - `parse_metadata.py` - which we need to run. The script performs
+some processing on the data to extract more meaningful descriptors, etc.
+
+To run the script, first ensure that you have put the necessary files into the `artwork_metdata`
+folder.
+
+To run the script, do the following (the directory where the script is located):
+
+```bash
+(venv) $ python parse_metadata.py
+```
+
+If you start seeing an incremental counter, then it's working!
+
+**Ensuring everything works**
+
+There are some automated tests for the system, which check functionality and make sure that everything
+is working as we expect it to. 
+
+To run these tests, do the following (from the directory where `manage.py` is located):
+
+```bash
+(venv) $ python manage.py test
+```
+
+If you want a more descriptive output, then add `-v 2` to the end of the command.
