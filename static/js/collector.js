@@ -9,6 +9,7 @@
 function interaction_event(event_type, content_id, page_id, csrf_token) {
     $.ajax({
         type: "POST",
+        // url: "interaction_logger",
         url: "logger/log/", // corresponds to the log view in collector.views
         data: {
             "csrfmiddlewaretoken": csrf_token,
@@ -22,3 +23,21 @@ function interaction_event(event_type, content_id, page_id, csrf_token) {
     });
 };
 
+/**
+ * A function to save the artwork ratings that the user assigns. We do not want to reload
+ * the page each time this happens, so we'll send it to the server via an ajax call.
+ */
+function rating_event(artwork_id, rating_number, csrf_token) {
+    $.ajax({
+        type: "POST",
+        url: "rating/",
+        data: {
+            "csrfmiddlewaretoken": csrf_token,
+            "artwork_id": artwork_id,
+            "rating_number": rating_number
+        },
+        fail: function() {
+            console.log('rating log failed (' + artwork_id + ')')
+        }
+    });
+}

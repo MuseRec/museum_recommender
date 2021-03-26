@@ -1,0 +1,17 @@
+.artwork-img-style {
+    width: 100px;
+    height: 100px;
+    overflow: hidden;
+    justify-content: center;
+    display: flex;
+    flex-direction: row;
+}
+
+.artwork-img-style img {
+    height: 100%;
+    flex: 1;
+}
+
+#artwork-card {
+    width: fit-content;
+}

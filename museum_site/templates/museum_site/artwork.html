@@ -1,0 +1,59 @@
+{% extends "museum_site/base.html" %}
+
+{% block content %}
+    
+    <div class='row artwork-body'>
+        <div class='col'>
+            <img src = "{{ artwork.img_url }}" alt = "{{ artwork.title }}" class="img-fluid" />
+        </div>
+        <div class='col'>
+            <h3>{{ artwork.title }}</h3>
+            <p><em>{{ artwork.artist }}</em></p>
+            <p><strong>Category:</strong> {{ artwork.type_main }}</p>
+            {% if artwork.type_sub %}
+                <p>Sub-category: {{ artwork.type_sub }}
+            {% endif %}
+            <p><strong>Topics:</strong></p>
+            <ul>
+            {% for topic in artwork.topic %}
+                <li>{{ topic|title }}</li>
+            {% endfor %}
+            </ul>
+
+            {% comment %} Collapse thing here? {% endcomment %}
+            <div class='expandable-content'>
+            <div id='more-content' class='collapse in' aria-expanded='false'>
+                {% if artwork.culture %}
+                    <p><strong>Culture:</strong></p>
+                    <ul>
+                        {% for culture in artwork.culture %}
+                            <li>{{ culture|title }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                </ul>
+                {% if artwork.notes %}
+                    <strong>Notes:</strong>
+                    {% for note in artwork.notes %}
+                        <p>{{ note }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <a role="button" class="collapsed" data-toggle="collapse" href="#more-content" 
+                aria-expanded="false" aria-controls="more-content" id='show-more-button'
+                onclick="return interaction_event('show-more', '{{ artwork.art_id }}', '{{ page_id }}', '{{ csrf_token }}');"></a>
+            </div>
+
+            <br />
+            <h5>Rate me:</h5>
+            <div class="rating"> 
+                <input type="radio" name="rating" value="5" id="5" onclick="return rating_event('{{ artwork.art_id }}', 5, '{{ csrf_token }}');"><label for="5">☆</label> 
+                <input type="radio" name="rating" value="4" id="4" onclick="return rating_event('{{ artwork.art_id }}', 4, '{{ csrf_token }}');"><label for="4">☆</label> 
+                <input type="radio" name="rating" value="3" id="3" onclick="return rating_event('{{ artwork.art_id }}', 3, '{{ csrf_token }}');"><label for="3">☆</label> 
+                <input type="radio" name="rating" value="2" id="2" onclick="return rating_event('{{ artwork.art_id }}', 2, '{{ csrf_token }}');"><label for="2">☆</label> 
+                <input type="radio" name="rating" value="1" id="1" onclick="return rating_event('{{ artwork.art_id }}', 1, '{{ csrf_token }}');"><label for="1">☆</label>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}

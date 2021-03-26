@@ -46,5 +46,5 @@ class LogViewTest(TestCase):
         self.assertEqual(response_post.status_code, 200)
         self.assertRedirects(
             response_post, expected_url = reverse('index'), 
-            status_code = 302, target_status_code = 200
+            status_code=302
         )

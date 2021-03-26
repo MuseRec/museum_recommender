@@ -96,6 +96,7 @@ class ArtworkVisited(models.Model):
     user = models.ForeignKey(User, on_delete = models.CASCADE)
     art = models.ForeignKey(Artwork, on_delete = models.CASCADE)
     timestamp = models.DateTimeField()
+    rating = models.IntegerField(null = True)
 
     def __str__(self):
         return f"User: {self.user.user_id}; Art: {self.art.art_id}; Timestamp: {self.timestamp}"

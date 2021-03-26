@@ -1,8 +1,10 @@
 from django.test import TestCase
 from django.test.utils import tag
 from django.urls import reverse
+from django.utils import timezone
 
 from museum_site.models import User, UserDemographic 
+from museum_site.models import Artwork, ArtworkVisited
 
 class IndexGetTest(TestCase):
 
@@ -112,3 +114,110 @@ class HandleDemographicViewTest(TestCase):
         self.assertTrue(response.context['consent_required_before_demographic'])
         self.assertFalse(response.context['provided_consent'])
         self.assertIn('consent_form', response.context)
+
+class ArtworkTest(TestCase):
+
+    def setUp(self) -> None:
+        # add the user to the session
+        response_post = self.client.post(reverse('index'), data = {
+            'information_sheet_form': 'information_sheet_form', 'email': 'test@email.com',
+            'consent': True, 'contact_outcome': True 
+        })
+        self.assertEqual(response_post.status_code, 200)
+
+        self.user = User.objects.latest('user_created')
+
+        # create artwork (with null fields for simplicity)
+        self.artwork, created = Artwork.objects.get_or_create(
+            art_id = 'artwork1234', img_url = 'http://www.randomurl.com', 
+            img_thumbnail_url = 'http://www.randomurl.com' 
+            # urls are included because we know we have those
+        )
+
+    def test_that_artwork_is_returned(self):
+        response = self.client.get(reverse('artwork', args = [self.artwork.art_id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['provided_consent'])
+        self.assertEqual(response.context['page_id'], 'art_' + self.artwork.art_id)
+        self.assertEqual(response.context['artwork'], self.artwork)
+
+    def test_that_artwork_visited_object_is_created(self):
+        response = self.client.get(reverse('artwork', args = [self.artwork.art_id]))
+        self.assertEqual(response.status_code, 200)
+
+        av = ArtworkVisited.objects.latest('timestamp')
+        self.assertEqual(av.user, self.user)
+        self.assertEqual(av.art, self.artwork)
+
+class SaveRatingTest(TestCase):
+
+    def setUp(self) -> None:
+       # add the user to the session
+        response_post = self.client.post(reverse('index'), data = {
+            'information_sheet_form': 'information_sheet_form', 'email': 'test@email.com',
+            'consent': True, 'contact_outcome': True 
+        })
+        self.assertEqual(response_post.status_code, 200)
+
+        self.user = User.objects.latest('user_created')
+
+        # create artwork (with null fields for simplicity)
+        self.artwork, created = Artwork.objects.get_or_create(
+            art_id = 'artwork1234', img_url = 'http://www.randomurl.com', 
+            img_thumbnail_url = 'http://www.randomurl.com' 
+            # urls are included because we know we have those
+        )
+
+        self.artwork_visited, _ = ArtworkVisited.objects.get_or_create(
+            user = self.user, art = self.artwork, timestamp = timezone.now()
+        )
+    
+    def test_get_bad_request(self):
+        response = self.client.get(reverse('rating'))
+        self.assertEqual(response.status_code, 400)
+
+    def test_post_rating_successful(self):
+        response = self.client.post(
+            reverse('rating'),
+            data = {'artwork_id': self.artwork.art_id, 'rating_number': 5}
+        )
+        self.assertEqual(response.status_code, 200)
+
+        # check that the object has been created 
+        av = ArtworkVisited.objects.filter(user = self.user, art = self.artwork).latest('timestamp')
+        self.assertEqual(av.user, self.user)
+        self.assertEqual(av.art, self.artwork)
+        self.assertEqual(av.rating, 5)
+
+    def test_that_most_recent_object_is_updated(self):
+        # add a visit where the user rates the artwork
+        _ = self.client.get(reverse('artwork', args = [self.artwork.art_id]))
+        response = self.client.post(
+            reverse('rating'), 
+            data = {'artwork_id': self.artwork.art_id, 'rating_number': 1})
+        self.assertEqual(response.status_code, 200)
+
+        # add another couple of visits
+        _ = self.client.get(reverse('artwork', args = [self.artwork.art_id]))
+        _ = self.client.get(reverse('artwork', args = [self.artwork.art_id]))
+
+        # visit again, store a new rating
+        visit_respose = self.client.get(reverse('artwork', args = [self.artwork.art_id]))
+        rating_response = self.client.post(
+            reverse('rating'), 
+            data = {'artwork_id': self.artwork.art_id, 'rating_number': 4}
+        )
+        self.assertEqual(visit_respose.status_code, 200)
+        self.assertEqual(rating_response.status_code, 200)
+
+        # check that the most recent object is updated
+        self.assertEqual(
+            ArtworkVisited.objects.filter(
+                user = self.user, art = self.artwork).latest('timestamp').rating,
+                4
+        )
+
+        # check that the other objects haven't been updated
+        av_set = ArtworkVisited.objects.all().order_by('timestamp')
+        for av, rating in zip(av_set, [None, 1, None, None, 4]): # first none due to setUp
+            self.assertEqual(av.rating, rating)

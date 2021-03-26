@@ -22,8 +22,8 @@ def log(request):
 
         if request.POST['content_id'] == 'home-button':
             return redirect('index')
-        else:
-            return HttpResponse('ok')
+
+        return HttpResponse('ok')
     else:
         return HttpResponseBadRequest('log only works with POST')
 

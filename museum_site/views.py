@@ -1,12 +1,14 @@
+from django.http.response import Http404, HttpResponseBadRequest
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.template import loader
 from django.utils import timezone
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 import uuid
 
 from .forms import UserForm, UserDemographicForm
-from .models import User, UserDemographic
+from .models import User, UserDemographic, Artwork, ArtworkVisited
 
 def index(request):
     if request.method == 'POST':
@@ -25,9 +27,8 @@ def index(request):
                 })
     else:
         if 'user_id' in request.session:
-            return render(request, 'museum_site/index.html', {
-                'provided_consent': True, 'page_id': 'index'
-            })
+            return handle_render_home_page(request)
+            
         
         consent_form = UserForm()
         return render(request, 'museum_site/index.html', {
@@ -78,18 +79,54 @@ def handle_demographic_post(request):
         
         new_demo.save()
 
-        return render(request, 'museum_site/index.html', {
-            'provided_consent': True, 'page_id': 'index'
-        })
+        # return render(request, 'museum_site/index.html', {
+        #     'provided_consent': True, 'page_id': 'index'
+        # })
+        return handle_render_home_page(request)
 
 def handle_render_artwork_page(request):
     pass 
-    """
-        function needs to:
-            - render the individual artwork page, passing all relevant variables
-            - record that the user has visited the page (ArtworkVisited model)
-            - include historical artworks? include seeing this because you've seen x, y, z?
-    """
+
+def artwork(request, artwork_id):
+    art = Artwork.objects.get(art_id = artwork_id)
+
+    if art.topic is not None:
+        art.topic = [' > '.join(t.split('\\')) for t in art.topic]
+    # art.notes = ".\n".join(art.notes)
+
+    # record that the user has seen this artwork
+    ArtworkVisited.objects.create(
+        user = User.objects.get(user_id = request.session['user_id']),
+        art = art,
+        timestamp = timezone.now()
+    )
+
+    return render(request, 'museum_site/artwork.html', {
+        'provided_consent': True, 'page_id': 'art_' + artwork_id,
+        'artwork': art
+    })
 
 def handle_render_home_page(request):
-    pass 
+    # art = Artwork.objects.order_by('?')[:5]
+    art = Artwork.objects.all()[:5]
+    return render(request, 'museum_site/index.html', {
+        'provided_consent': True, 'page_id': 'index',
+        # 'artwork': art
+    })
+
+@ensure_csrf_cookie
+def save_rating(request):
+    if request.method == 'POST':
+        rating = request.POST['rating_number']
+        user = request.session['user_id']
+        artwork_id = request.POST['artwork_id']
+
+        # get the artwork and user pair in question (or by the latest)
+        art_visited = ArtworkVisited.objects.filter(
+            user = user, art = artwork_id).latest('timestamp')
+        art_visited.rating = rating 
+        art_visited.save()
+        
+        return HttpResponse('ok')
+    else:
+        return HttpResponseBadRequest('rating not posted to backend')
