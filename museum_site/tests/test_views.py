@@ -149,6 +149,24 @@ class ArtworkTest(TestCase):
         self.assertEqual(av.user, self.user)
         self.assertEqual(av.art, self.artwork)
 
+    def test_that_rating_is_returned_when_previously_rated(self):
+        # visit the artwork
+        visit_respose = self.client.get(reverse('artwork', args = [self.artwork.art_id]))
+        self.assertEqual(visit_respose.status_code, 200)
+
+        # post the rating to the backend
+        response = self.client.post(
+            reverse('rating'),
+            data = {'artwork_id': self.artwork.art_id, 'rating_number': 5}
+        )
+        self.assertEqual(response.status_code, 200)
+
+        # visit the artwork and check that the rating is in the response
+        response = self.client.get(reverse('artwork', args = [self.artwork.art_id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['artwork_rating'], '5')
+
+
 class SaveRatingTest(TestCase):
 
     def setUp(self) -> None:

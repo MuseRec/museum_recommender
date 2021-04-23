@@ -84,8 +84,6 @@ def handle_demographic_post(request):
         # })
         return handle_render_home_page(request)
 
-def handle_render_artwork_page(request):
-    pass 
 
 def artwork(request, artwork_id):
     art = Artwork.objects.get(art_id = artwork_id)
@@ -93,6 +91,13 @@ def artwork(request, artwork_id):
     if art.topic is not None:
         art.topic = [' > '.join(t.split('\\')) for t in art.topic]
     # art.notes = ".\n".join(art.notes)
+
+    # if the user has previously visited the artwork, then get the rating
+    av = ArtworkVisited.objects.filter(user = request.session['user_id'], art = artwork_id)
+    if av: 
+        artwork_rating = av.latest('timestamp').rating
+    else: 
+        artwork_rating = None 
 
     # record that the user has seen this artwork
     ArtworkVisited.objects.create(
@@ -103,7 +108,7 @@ def artwork(request, artwork_id):
 
     return render(request, 'museum_site/artwork.html', {
         'provided_consent': True, 'page_id': 'art_' + artwork_id,
-        'artwork': art
+        'artwork': art, 'artwork_rating': str(artwork_rating)
     })
 
 def handle_render_home_page(request):
@@ -111,7 +116,7 @@ def handle_render_home_page(request):
     art = Artwork.objects.all()[:5]
     return render(request, 'museum_site/index.html', {
         'provided_consent': True, 'page_id': 'index',
-        # 'artwork': art
+        'artwork': art
     })
 
 @ensure_csrf_cookie
@@ -120,6 +125,8 @@ def save_rating(request):
         rating = request.POST['rating_number']
         user = request.session['user_id']
         artwork_id = request.POST['artwork_id']
+
+        print(user, artwork_id, rating)
 
         # get the artwork and user pair in question (or by the latest)
         art_visited = ArtworkVisited.objects.filter(

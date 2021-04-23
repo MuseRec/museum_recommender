@@ -46,14 +46,32 @@
 
             <br />
             <h5>Rate me:</h5>
-            <div class="rating"> 
+            <div class="rating">
+                {% with '5 4 3 2 1' as rating_list %}
+                    {% for rating_value in rating_list.split %}
+                        <input type="radio" name="rating" value='{{ rating_value }}' id='{{ rating_value }}'
+                            onclick="return rating_event('{{ artwork.art_id }}', '{{ rating_value }}, '{{ csrf_token }}');"
+                            checked><label for='{{ rating_value }}'>☆</label>
+                    {% endfor %}
+                {% endwith %}
+            </div>
+            {% comment %} <div class="rating"> 
                 <input type="radio" name="rating" value="5" id="5" onclick="return rating_event('{{ artwork.art_id }}', 5, '{{ csrf_token }}');"><label for="5">☆</label> 
                 <input type="radio" name="rating" value="4" id="4" onclick="return rating_event('{{ artwork.art_id }}', 4, '{{ csrf_token }}');"><label for="4">☆</label> 
                 <input type="radio" name="rating" value="3" id="3" onclick="return rating_event('{{ artwork.art_id }}', 3, '{{ csrf_token }}');"><label for="3">☆</label> 
                 <input type="radio" name="rating" value="2" id="2" onclick="return rating_event('{{ artwork.art_id }}', 2, '{{ csrf_token }}');"><label for="2">☆</label> 
                 <input type="radio" name="rating" value="1" id="1" onclick="return rating_event('{{ artwork.art_id }}', 1, '{{ csrf_token }}');"><label for="1">☆</label>
-            </div>
+            </div> {% endcomment %}
         </div>
     </div>
+
+    {% comment %} {% if artwork_rating %}
+        <script type = "text/javascript">
+            $(function() {
+                var $radios = $('input:radio[name=rating]');
+                $radios.filter("[value='{{ artwork_rating }}'").prop('checked', True)
+            });
+        </script>
+    {% endif %} {% endcomment %}
 
 {% endblock content %}
