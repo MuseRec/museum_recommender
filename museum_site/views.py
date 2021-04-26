@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.template import loader
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.core.paginator import Paginator
 
 import uuid
 
@@ -113,10 +114,16 @@ def artwork(request, artwork_id):
 
 def handle_render_home_page(request):
     # art = Artwork.objects.order_by('?')[:5]
-    art = Artwork.objects.all()[:5]
+    # art = Artwork.objects.all()[:5]
+    art = Artwork.objects.all()
+    paginator = Paginator(art, 30)
+
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     return render(request, 'museum_site/index.html', {
         'provided_consent': True, 'page_id': 'index',
-        'artwork': art
+        'page_obj': page_obj
+        # 'artwork': art
     })
 
 @ensure_csrf_cookie
@@ -125,8 +132,6 @@ def save_rating(request):
         rating = request.POST['rating_number']
         user = request.session['user_id']
         artwork_id = request.POST['artwork_id']
-
-        print(user, artwork_id, rating)
 
         # get the artwork and user pair in question (or by the latest)
         art_visited = ArtworkVisited.objects.filter(
