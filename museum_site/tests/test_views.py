@@ -130,7 +130,8 @@ class ArtworkTest(TestCase):
         # create artwork (with null fields for simplicity)
         self.artwork, created = Artwork.objects.get_or_create(
             art_id = 'artwork1234', img_url = 'http://www.randomurl.com', 
-            img_thumbnail_url = 'http://www.randomurl.com' 
+            img_thumbnail_url = 'http://www.randomurl.com',
+            topic = ["Occupation\\science\\physicist", "Portrait male\\waist length"] 
             # urls are included because we know we have those
         )
 
@@ -148,6 +149,17 @@ class ArtworkTest(TestCase):
         av = ArtworkVisited.objects.latest('timestamp')
         self.assertEqual(av.user, self.user)
         self.assertEqual(av.art, self.artwork)
+
+    def test_that_topics_are_correctly_split(self):
+        response = self.client.get(reverse('artwork', args = [self.artwork.art_id]))
+        self.assertEqual(response.status_code, 200)
+
+        # get the original artwork from the database
+        org_artwork = Artwork.objects.get(art_id = self.artwork.art_id)
+
+        split_topic = response.context['artwork'].topic 
+        self.assertEqual(len(org_artwork.topic), len(split_topic))
+
 
     def test_that_rating_is_returned_when_previously_rated(self):
         # visit the artwork
