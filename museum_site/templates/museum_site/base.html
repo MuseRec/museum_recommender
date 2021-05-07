@@ -49,8 +49,8 @@
                             <a class="nav-link" href="#">My Favourites<span class="sr-only">(current)</span></a>
                         </ul>
                         <form class="form-inline my-2 my-lg-0">
-                          <input class="form-control mr-sm-2" type="search" placeholder="Search Collections" aria-label="Search">
-                          <button class="btn btn-outline-secondary my-2 my-sm-0" type="submit">Search</button>
+                          <input class="form-control mr-sm-2" type="search" placeholder="Search Collections" aria-label="Search" name="searh-artwork">
+                          <button class="btn btn-outline-secondary my-2 my-sm-0" type="submit" onclick = "return interaction_event('search', '', '{{ page_id }}', '{{ csrf_token }}');">Search</button>
                         </form>
                       </div>
                     {% else %}
