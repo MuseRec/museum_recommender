@@ -5,8 +5,10 @@ from django.template import loader
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.core.paginator import Paginator
+from django.db.models import Q
 
-import uuid
+import uuid, operator
+from functools import reduce
 
 from .forms import UserForm, UserDemographicForm
 from .models import User, UserDemographic, Artwork, ArtworkVisited
@@ -113,9 +115,23 @@ def artwork(request, artwork_id):
     })
 
 def handle_render_home_page(request):
+    # if there is a search request
+    if request.GET.get('search'):
+        query = request.GET.get('search')
+
+        art = Artwork.objects.filter(
+            Q(title__icontains = query) | Q(artist__icontains = query) |
+            Q(date__icontains = query) | 
+            reduce(operator.or_, (Q(topic__icontains = x) for x in query.split(' '))) |
+            reduce(operator.or_, (Q(notes__icontains = x) for x in query.split(' '))) |
+            reduce(operator.or_, (Q(culture__icontains = x) for x in query.split(' ')))
+        )
+    else:
+        art = Artwork.objects.all()
+
     # art = Artwork.objects.order_by('?')[:5]
     # art = Artwork.objects.all()[:5]
-    art = Artwork.objects.all()
+    # art = Artwork.objects.all()
     paginator = Paginator(art, 30)
 
     page_number = request.GET.get('page')

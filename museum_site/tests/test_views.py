@@ -115,6 +115,52 @@ class HandleDemographicViewTest(TestCase):
         self.assertFalse(response.context['provided_consent'])
         self.assertIn('consent_form', response.context)
 
+class HandleRenderHomePageTest(TestCase):
+
+    def setUp(self) -> None:
+        # add the user to the session
+        response = self.client.post(reverse('index'), data = {
+            'information_sheet_form': 'information_sheet_form', 'email': 'test@email.com',
+            'consent': True, 'contact_outcome': True
+        })
+        self.assertEqual(response.status_code, 200)
+
+        self.user = User.objects.latest('user_created')
+
+        # create artwork that can be passed to the front end
+        self.artworks = [
+            Artwork.objects.create(
+                art_id = 'artwork1', img_url = 'http://www.randomurl.com', 
+                img_thumbnail_url = 'http://www.randomurl.com',
+                title = 'artwork number one', artist = 'artist number one', date = '2021',
+                topic = ["Literature\\Shakespeare", "Occupation\\sport\\wrestling"],
+                notes = ["“Ha’ I Like Not That” refers to a scene from Shakespeare’s Othello."],
+                culture = ["Osage Indians", "Indians of North America", "Native Americans"]
+            ),
+            Artwork.objects.create(
+                art_id = 'artwork2', img_url = 'http://www.randomurl.com', 
+                img_thumbnail_url = 'http://www.randomurl.com',
+                title = 'artwork number two', artist = 'artist number two', date = '2020',
+                topic = ["Animal\\panther"]
+            ),
+            Artwork.objects.create(
+                art_id = 'artwork3', img_url = 'http://www.randomurl.com', 
+                img_thumbnail_url = 'http://www.randomurl.com',
+                title = 'artwork number three', artist = 'artist number three', date = '2019',
+                topic = ["Recreation\\leisure\\reading", "Portrait female"],
+                notes = ["John Henry Brown chose to paint this miniature from a daguerreotype he made of United States president James Buchanan (1791-1868)."],
+                culture = ["East Indians"]
+            )
+        ]
+
+    def test_artworks_are_returned(self):
+        response = self.client.get(reverse('index'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['provided_consent'])
+        self.assertEqual(len(response.context['page_obj']), 3)
+        for art in self.artworks:
+            self.assertTrue(art in response.context['page_obj'])
+
 class ArtworkTest(TestCase):
 
     def setUp(self) -> None:
