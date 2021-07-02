@@ -6,16 +6,20 @@ python:
 services:
   - mysql
 
-before_install:
-  - export DJANGO_SETTINGS_MODULE=museum_webapp.settings
+env:
+  global:
+    - DJANGO_SETTINGS_MODULE=museum_webapp.settings
+    - PYTHONPATH="/home/travis/build/JonoCX/museum_recommender"
+    - PIP_USE_MIRRORS=true
+  matrix:
+    - DJANGO=3.1.1 DB=mysql
 
 install:
   - pip install -r requirements.txt
 
 before_script:
-  - mysql -e 'CREATE DATABASE IF NOT EXISTS travis_ci_db;' -uroot
-  - mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'travis'@'localhost';" -uroot 
-  - python manage.py migrate
+  - mysql -e 'CREATE DATABASE travis_ci_db;'
+  - python manage.py syncdb --noinput
 
 script:
   - python manage.py test
