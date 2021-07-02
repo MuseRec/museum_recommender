@@ -7,7 +7,7 @@ services:
   - mysql
 
 before_install:
-  - export DJANGO_SETTINGS=museum_webapp.settings
+  - export DJANGO_SETTINGS_MODULE=museum_webapp.settings
 
 install:
   - pip install -r requirements.txt
