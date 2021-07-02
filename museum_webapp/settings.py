@@ -83,6 +83,9 @@ print('TRAVIS:', os.getenv('TRAVIS', None))
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 if os.getenv('TRAVIS', None):
+    DEBUG = False 
+    TEMPLATE_DEBUG = True
+
     DATABASES = {
         'default': {
             'ENGINE:': 'django.db.backends.mysql',
@@ -93,6 +96,7 @@ if os.getenv('TRAVIS', None):
             'PORT': '3306'
         }
     }
+    print('DATABASES:', DATABASES)
 else:
     DATABASES = {
         'default': {
