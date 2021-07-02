@@ -88,7 +88,8 @@ if os.getenv('TRAVIS', None):
             'NAME': 'travis_ci_db',
             'USER': 'travis',
             'PASSWORD': '',
-            'HOST': '127.0.0.1'
+            'HOST': '127.0.0.1',
+            'PORT': '3306'
         }
     }
 else:
