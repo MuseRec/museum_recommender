@@ -83,6 +83,7 @@ print('TRAVIS:', os.getenv('TRAVIS', None))
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 if os.getenv('TRAVIS', None):
+    SECRET_KEY = 'l5il)#1h#d&_sbt+*svpu&6wkz$dz(gz93&)ew3l2u=tyjz*a-'
     DEBUG = False 
     TEMPLATE_DEBUG = True
 

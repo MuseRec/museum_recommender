@@ -19,7 +19,6 @@ install:
 
 before_script:
   - mysql -e 'CREATE DATABASE travis_ci_db;'
-  - python manage.py makemigrations
   - python manage.py migrate
 
 script:
