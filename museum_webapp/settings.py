@@ -94,7 +94,10 @@ if os.getenv('TRAVIS', None):
             'USER': 'travis',
             'PASSWORD': '',
             'HOST': '127.0.0.1',
-            'PORT': '3306'
+            'PORT': '3306',
+            'TEST': {
+                'NAME': 'travis_ci_db_test'
+            }
         }
     }
     print('DATABASES:', DATABASES)
