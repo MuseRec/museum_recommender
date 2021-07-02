@@ -1,7 +1,15 @@
 language: python
-install:
-  - pip install -r requirements.txt
+
 services:
   - mysql
+
+install:
+  - pip install -r requirements.txt
+
+before_script:
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS travis_ci_db;' -uroot
+  - mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'travis'@'localhost';" -uroot 
+  - python manage.py migrate
+
 script:
   - python manage.py test

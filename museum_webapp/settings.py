@@ -81,17 +81,27 @@ WSGI_APPLICATION = 'museum_webapp.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'museum_recsys_db',
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PW'),
-        'HOST': '127.0.0.1',
-        'PORT': '3306'
+if os.getenv('TRAVIS', None):
+    DATABASES = {
+        'default': {
+            'ENGINE:': 'django.db.backends.mysql',
+            'NAME': 'travis_ci_db',
+            'USER': 'travis',
+            'PASSWORD': '',
+            'HOST': '127.0.0.1'
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'museum_recsys_db',
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PW'),
+            'HOST': '127.0.0.1',
+            'PORT': '3306'
+        }
+    }
 
 
 # Password validation
