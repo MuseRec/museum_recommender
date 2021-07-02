@@ -8,7 +8,7 @@ services:
 
 env:
   global:
-    - DJANGO_SETTINGS_MODULE='museum_webapp.settings'
+    - DJANGO_SETTINGS_MODULE=museum_webapp.settings
     - PYTHONPATH="/home/travis/build/JonoCX/museum_recommender"
     - PIP_USE_MIRRORS=true
   matrix:
@@ -20,7 +20,7 @@ install:
 
 before_script:
   - mysql -e 'CREATE DATABASE travis_ci_db;'
-  - python manage.py migrate
+  - python manage.py migrate --settings=museum_webapp.settings
 
 script:
-  - python manage.py test
+  - python manage.py test --settings=museum_webapp.settings
