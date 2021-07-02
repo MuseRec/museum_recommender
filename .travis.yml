@@ -19,7 +19,7 @@ install:
   - pip install -r requirements.txt
 
 before_script:
-  - mysql -e 'CREATE DATABASE travis_ci_db;'
+  - mysql -e "CREATE DATABASE travis_ci_db; GRANT ALL PRIVILEGES ON *.* TO 'travis'@'localhost';"
   - python manage.py migrate --settings=museum_webapp.settings
 
 script:
