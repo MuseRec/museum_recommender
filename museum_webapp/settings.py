@@ -78,6 +78,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'museum_webapp.wsgi.application'
 
+print('TRAVIS:', os.getenv('TRAVIS', None))
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
