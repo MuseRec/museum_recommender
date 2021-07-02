@@ -155,9 +155,17 @@ class HandleRenderHomePageTest(TestCase):
 
     def test_artworks_are_returned(self):
         response = self.client.get(reverse('index'))
+
+        # test that the status code of the page is okay
         self.assertEqual(response.status_code, 200)
+
+        # test that provided consent is returned as true
         self.assertTrue(response.context['provided_consent'])
+
+        # there should be three artworks in the response
         self.assertEqual(len(response.context['page_obj']), 3)
+
+        # and each of those should equal the ones we've created previously.
         for art in self.artworks:
             self.assertTrue(art in response.context['page_obj'])
 
