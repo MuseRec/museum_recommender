@@ -20,7 +20,8 @@ install:
   - pip install -r requirements.txt
 
 before_script:
-  - mysql -e "CREATE DATABASE travis_ci_db;"
+  # - mysql -e "CREATE DATABASE travis_ci_db;"
+  - sqlite3 db.sqlite3
   - python manage.py migrate --settings=museum_webapp.settings
 
 script:
