@@ -18,7 +18,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 # STATIC_DIR = os.path.join(BASE_DIR, 'static')
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
@@ -78,30 +77,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'museum_webapp.wsgi.application'
 
-print('TRAVIS:', os.getenv('TRAVIS', None))
-
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 if os.getenv('TRAVIS', None):
-    print('SETTINGS', os.getenv('DJANGO_SETTINGS_MODULE'))
     SECRET_KEY = 'l5il)#1h#d&_sbt+*svpu&6wkz$dz(gz93&)ew3l2u=tyjz*a-'
     DEBUG = False 
     TEMPLATE_DEBUG = True
 
     DATABASES = {
-        # 'default': {
-        #     'ENGINE:': 'django.db.backends.mysql',
-        #     'NAME': 'travis_ci_db',
-        #     'USER': 'root',
-        #     'PASSWORD': '',
-        #     'HOST': '127.0.0.1',
-        # }
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': os.path.join(BASE_DIR , 'db.sqlite3'),
         }
     }
-    print('DATABASES:', DATABASES)
 else:
     DATABASES = {
         'default': {
@@ -113,7 +101,6 @@ else:
             'PORT': '3306'
         }
     }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
