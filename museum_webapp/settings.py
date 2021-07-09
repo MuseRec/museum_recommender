@@ -91,13 +91,9 @@ if os.getenv('TRAVIS', None):
         'default': {
             'ENGINE:': 'django.db.backends.mysql',
             'NAME': 'travis_ci_db',
-            'USER': 'travis',
+            'USER': 'root',
             'PASSWORD': '',
             'HOST': '127.0.0.1',
-            'PORT': '3306',
-            'TEST': {
-                'NAME': 'travis_ci_db_test'
-            }
         }
     }
     print('DATABASES:', DATABASES)
