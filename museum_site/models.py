@@ -69,26 +69,27 @@ class UserDemographic(models.Model):
         return f"{self.user} demographics: [{self.age}, {self.gender}, {self.education}, " +  \
                 f"{self.work}]"
 
+
 class Artwork(models.Model):
-    """
-        A model for the artwork that forms the body of the work.
-    """
-    art_id = models.CharField(max_length = 64, primary_key = True)
-    title = models.CharField(max_length = 1024, null = True)
-    artist = models.CharField(max_length = 1024, null = True)
-    img_url = models.URLField(max_length = 512)
-    img_thumbnail_url = models.URLField(max_length = 512)
-    type_main = models.CharField(max_length = 64, null = True)
-    type_sub = models.CharField(max_length = 64, null = True)
-    date_range = models.CharField(max_length = 128, null = True)
-    date = models.CharField(max_length  = 128, null = True)
-    topic = models.JSONField(null = True) # topic - can have multiple elements
-    notes = models.JSONField(null = True) # description - can have multiple elements
-    culture = models.JSONField(null = True) # multiple elements are allowed.
-    role = models.CharField(max_length = 64, null = True)
+    art_id = models.CharField(max_length=64, primary_key=True)
+    collection = models.CharField(max_length=256, null=True)
+    classification = models.CharField(max_length=256, null=True)
+    title = models.CharField(max_length=1024, null=True)
+    medium = models.CharField(max_length=512, null=True)
+    artist = models.CharField(max_length=256, null=True)
+    birth_date = models.IntegerField(null=True)
+    death_date = models.IntegerField(null=True)
+    earliest_date = models.IntegerField(null=True)
+    latest_date = models.IntegerField(null=True)
+    image_credit = models.CharField(max_length=1024, null=True)
+    linked_terms = models.CharField(max_length=1024, null=True)
+    linked_topics = models.CharField(max_length=1024, null=True)
+    linked_art_terms = models.CharField(max_length=512, null=True)
+    img_file = models.CharField(max_length=512, null=True)
 
     def __str__(self):
         return f"{self.art_id}"
+
 
 class ArtworkVisited(models.Model):
     """
