@@ -52,6 +52,7 @@ csv_columns = [
     'Linked Topics',
     'Linked Art Terms',
     'Filename',
+    'Location',
 ]
 
 db_columns = [
@@ -69,6 +70,7 @@ db_columns = [
     'Linked Topics',
     'Linked Art Terms',
     'Filename',
+    'Location',
 ]
 
 mv_columns = [
@@ -270,6 +272,7 @@ def artuk_record_parser(file, folder=None, **kwargs) -> pd.DataFrame:
             db_dict["Linked Topics"] = row_dict["Linked Topics"]
             db_dict["Linked Art Terms"] = row_dict["Linked Art Terms"]
             db_dict["Filename"] = row_dict["Filename"]
+            db_dict["Location"] = row_dict["Location"]
 
             # Parse dates and convert them to Earliest and Latest dates
             e_date = row_dict["Earliest Date"]

@@ -1,77 +1,115 @@
 {% extends "museum_site/base.html" %}
 
 {% block content %}
-    
+    {% load static %}
+
     <div class='row artwork-body'>
-        <div class='col'>
-            <img src = "{{ artwork.img_url }}" alt = "{{ artwork.title }}" class="img-fluid" />
+        <div class='col' style="margin-left: 0.25em;">
+            <img src="{% static 'img/images/' %}{{ artwork.img_location }}" alt="{{ artwork.title }}"
+                 class="img-fluid"/>
         </div>
-        <div class='col'>
-            <h3>{{ artwork.title }}</h3>
-            <p><em>{{ artwork.artist }}</em></p>
-            <p><strong>Category:</strong> {{ artwork.type_main }}</p>
-            {% if artwork.type_sub %}
-                <p>Sub-category: {{ artwork.type_sub }}
+
+        <div class='col' style="margin-right: 0.25em;">
+            <span class="text-title">{{ artwork.title }}</span>
+
+            <hr class="full-separator"/>
+
+            <div><strong>Artist:</strong> {{ artwork.artist }}
+
+            {% if artwork.classification %}
+                <div><strong>Classification:</strong> {{ artwork.classification }}</div>
             {% endif %}
-            <p><strong>Topics:</strong></p>
-            <ul>
-            {% for topic in artwork.topic %}
-                <li>{{ topic|title }}</li>
-            {% endfor %}
-            </ul>
 
-            {% comment %} Collapse thing here? {% endcomment %}
-            <div class='expandable-content'>
-            <div id='more-content' class='collapse in' aria-expanded='false'>
-                {% if artwork.culture %}
-                    <p><strong>Culture:</strong></p>
-                    <ul>
-                        {% for culture in artwork.culture %}
-                            <li>{{ culture|title }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-                </ul>
-                {% if artwork.notes %}
-                    <strong>Notes:</strong>
-                    {% for note in artwork.notes %}
-                        <p>{{ note }}</p>
+            {% if artwork.collection %}
+                <div><strong>Collection:</strong> {{ artwork.collection }}</div>
+            {% endif %}
+
+            {% if artwork.linked_topics %}
+                <div><strong>Topics:</strong></div>
+                <ul class="list">
+                    {% for topic in artwork.linked_topics %}
+                        <li>{{ topic }}</li>
                     {% endfor %}
-                {% endif %}
-            </div>
-            <a role="button" class="collapsed" data-toggle="collapse" href="#more-content" 
-                aria-expanded="false" aria-controls="more-content" id='show-more-button'
-                onclick="return interaction_event('show-more', '{{ artwork.art_id }}', '{{ page_id }}', '{{ csrf_token }}');"></a>
-            </div>
+                </ul>
+            {% endif %}
 
-            <br />
+            {% if artwork.linked_terms %}
+                <div><strong>Terms:</strong></div>
+                <ul class="list">
+                    {% for term in artwork.linked_terms %}
+                        <li>{{ term }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% if artwork.medium %}
+                <div><strong>Medium:</strong></div>
+                <ul class="list">
+                    {% for medium in artwork.medium %}
+                        <li>{{ medium }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% comment %}
+                <div class='expandable-content'>
+                    <div id='more-content' class='collapse in' aria-expanded='false'>
+                        {% if artwork.culture %}
+                            <p><strong>Culture:</strong></p>
+                            <ul>
+                                {% for culture in artwork.culture %}
+                                    <li>{{ culture|title }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        {% if artwork.notes %}
+                            <strong>Notes:</strong>
+                            {% for note in artwork.notes %}
+                                <p>{{ note }}</p>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <a role="button" class="collapsed" id='show-more-button'
+                       data-toggle="collapse" aria-expanded="false" aria-controls="more-content"
+                       href="#more-content"
+                       onclick="return interaction_event(
+                               'show-more',
+                               '{{ artwork.art_id }}',
+                               '{{ page_id }}',
+                               '{{ csrf_token }}'
+                               );"></a>
+                </div>
+            {% endcomment %}
+
+            <hr class="full-separator"/>
+
             <h5>Rate me:</h5>
             <div class="rating">
-                {% with '5 4 3 2 1' as rating_list %}
+                {% with rating_list='5 4 3 2 1' %}
                     {% for rating_value in rating_list.split %}
-                        <input type="radio" name="rating" value='{{ rating_value }}' id='{{ rating_value }}'
-                            onclick="return rating_event('{{ artwork.art_id }}', '{{ rating_value }}, '{{ csrf_token }}');"
-                            checked><label for='{{ rating_value }}'>☆</label>
+                        <input
+                                type="radio" name="rating" id="{{ rating_value }}" value="{{ rating_value }}"
+                                onclick="return rating_event(
+                                        '{{ artwork.art_id }}',
+                                        '{{ rating_value }}',
+                                        '{{ csrf_token }}'
+                                        );">
+                        <label for='{{ rating_value }}'>☆</label>
                     {% endfor %}
                 {% endwith %}
             </div>
-            {% comment %} <div class="rating"> 
-                <input type="radio" name="rating" value="5" id="5" onclick="return rating_event('{{ artwork.art_id }}', 5, '{{ csrf_token }}');"><label for="5">☆</label> 
-                <input type="radio" name="rating" value="4" id="4" onclick="return rating_event('{{ artwork.art_id }}', 4, '{{ csrf_token }}');"><label for="4">☆</label> 
-                <input type="radio" name="rating" value="3" id="3" onclick="return rating_event('{{ artwork.art_id }}', 3, '{{ csrf_token }}');"><label for="3">☆</label> 
-                <input type="radio" name="rating" value="2" id="2" onclick="return rating_event('{{ artwork.art_id }}', 2, '{{ csrf_token }}');"><label for="2">☆</label> 
-                <input type="radio" name="rating" value="1" id="1" onclick="return rating_event('{{ artwork.art_id }}', 1, '{{ csrf_token }}');"><label for="1">☆</label>
-            </div> {% endcomment %}
         </div>
     </div>
 
-    {% comment %} {% if artwork_rating %}
-        <script type = "text/javascript">
-            $(function() {
-                var $radios = $('input:radio[name=rating]');
-                $radios.filter("[value='{{ artwork_rating }}'").prop('checked', True)
-            });
-        </script>
-    {% endif %} {% endcomment %}
-
+    {% comment %}
+        {% if artwork_rating %}
+            <script type="text/javascript">
+                $(function () {
+                    var $radios = $('input:radio[name=rating]');
+                    $radios.filter("[value='{{ artwork_rating }}'").prop('checked', True)
+                });
+            </script>
+        {% endif %}
+    {% endcomment %}
+    </div>
 {% endblock content %}

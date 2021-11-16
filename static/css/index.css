@@ -15,3 +15,46 @@
 #artwork-card {
     width: fit-content;
 }
+
+/*
+.separator {
+    display: block;
+    margin-right: 10%;
+    margin-left: 10%;
+    overflow: hidden;
+    border-style: inset;
+    border-width: 1px;
+    border-color: white;
+    color: black;
+}
+*/
+.separator {
+    display: block;
+    margin-right: 50px;
+    margin-left: 50px;
+    border: none;
+    height: 0.5px;
+    /* Set the hr color */
+    color: #d39669; /* old IE */
+    background-color: #c9a182; /* Modern Browsers */
+}
+
+.text-title {
+    color: #4f301d;
+    font-size: 24pt;
+    font-weight: bold;
+}
+
+.text-description {
+    color: #4f301d;
+    font-size: 8pt;
+}
+
+.text-artist {
+    margin-left: 20px;
+}
+
+.tight {
+    margin: 0;
+    padding: 0;
+}

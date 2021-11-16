@@ -86,6 +86,7 @@ class Artwork(models.Model):
     linked_topics = models.CharField(max_length=1024, null=True)
     linked_art_terms = models.CharField(max_length=512, null=True)
     img_file = models.CharField(max_length=512, null=True)
+    img_location = models.CharField(max_length=1024, null=True)
 
     def __str__(self):
         return f"{self.art_id}"

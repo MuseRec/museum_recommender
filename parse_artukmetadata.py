@@ -55,6 +55,7 @@ def artuk_metadata(file):
                 linked_topics=to_json(meta.loc[i, "Linked Topics"]),
                 linked_art_terms=meta.loc[i, "Linked Art Terms"],
                 img_file=meta.loc[i, "Filename"],
+                img_location=meta.loc[i, "Location"],
             )
             artwork.save()
 
@@ -64,7 +65,7 @@ def artuk_metadata(file):
 
 
 if __name__ == "__main__":
-    csv_metadata = os.path.join("artwork_metadata", "ArtUK_main_sample.csv")
+    csv_metadata = os.path.join("artwork_metadata", "ArtUK_main_sample_locations.csv")
     if len(sys.argv) > 1:
         csv_metadata = sys.argv[1]
     obj = artuk_metadata(csv_metadata)
