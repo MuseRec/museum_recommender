@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from museum_site.models import User, UserDemographic
 from museum_site.models import Artwork, ArtworkVisited
+from collector.views import log
 
 
 class IndexGetTest(TestCase):
@@ -133,9 +134,9 @@ class HandleRenderHomePageTest(TestCase):
                 classification="Classification 1",
                 title="Title 1",
                 medium="Medium 1",
-                artist="Aaaa Bbbb",
-                birth_date=1880,
-                death_date=1950,
+                artist='["Aaaa Bbbb"]',
+                birth_date='["1880"]',
+                death_date='["1950"]',
                 earliest_date=1900,
                 latest_date=1920,
                 image_credit="Institution 1",
@@ -151,9 +152,9 @@ class HandleRenderHomePageTest(TestCase):
                 classification="Classification 2",
                 title="Title 2",
                 medium="Medium 2",
-                artist="Cccc Dddd",
-                birth_date=1580,
-                death_date=1650,
+                artist='["Aaaa Bbbb", "Cccc Dddd", "Eeee Ffff"]',
+                birth_date='["1581", "1582", "1583", "1584"]',
+                death_date='["1650", "1651", "1652", "1653"]',
                 earliest_date=1600,
                 latest_date=1620,
                 image_credit="Institution 2",
@@ -169,8 +170,8 @@ class HandleRenderHomePageTest(TestCase):
                 classification="Classification 3",
                 title="Title 3",
                 medium="Medium 3",
-                artist="Eeee Ffff",
-                birth_date=1980,
+                artist='["Eeee Ffff"]',
+                birth_date='["1980"]',
                 death_date=None,
                 earliest_date=2000,
                 latest_date=None,
@@ -214,7 +215,7 @@ class ArtworkTest(TestCase):
         self.artwork, created = Artwork.objects.get_or_create(
             art_id="abcdef123456",
             title="Title 1",
-            artist="Aaaa Bbbb",
+            artist='["Aaaa Bbbb"]',
             img_file="image_file_1.jpg",
             img_location="BBB/DDD/image_file_1.jpg",
         )
@@ -275,7 +276,7 @@ class SaveRatingTest(TestCase):
         self.artwork, created = Artwork.objects.get_or_create(
             art_id="abcdef123456",
             title="Title 1",
-            artist="Aaaa Bbbb",
+            artist='["Aaaa Bbbb"]',
             img_file="image_file_1.jpg",
             img_location="BBB/DDD/image_file_1.jpg",
         )

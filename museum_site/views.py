@@ -1,12 +1,11 @@
-from django.http.response import HttpResponse, Http404, HttpResponseBadRequest
+from django.http.response import HttpResponseBadRequest
 from django.shortcuts import render
 from django.http import HttpResponse
-from django.template import loader
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views import View
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.urls import reverse
 
 import uuid
 import operator
@@ -104,12 +103,28 @@ def artwork(request, artwork_id):
         artwork_rating = None
 
     # Convert JSON types to lists
+    if art.artist:
+        if any(e.find("unknown") != -1 for e in json.loads(art.artist)):
+            art.artist = [(0, "Unknown artist")]
+        else:
+            art.artist = [(i, e) for i, e in enumerate(json.loads(art.artist))]
+    if art.birth_date:
+        art.birth_date = [(i, e) for i, e in enumerate(json.loads(art.birth_date))]
+    if art.death_date:
+        art.death_date = [(i, e) for i, e in enumerate(json.loads(art.death_date))]
     if art.medium:
         art.medium = json.loads(art.medium)
     if art.linked_topics:
         art.linked_topics = json.loads(art.linked_topics)
     if art.linked_terms:
         art.linked_terms = json.loads(art.linked_terms)
+
+    artists = None
+    if len(art.artist) > 1 and \
+            (art.birth_date is not None and len(art.artist) == len(art.birth_date)) and \
+            (art.death_date is not None and len(art.artist) == len(art.death_date)):
+        artists = ["{0} ({1} - {2})".format(n[1], db[1], dd[1])
+                   for n, db, dd in zip(*[art.artist, art.birth_date, art.death_date])]
 
     # record that the user has seen this artwork
     ArtworkVisited.objects.create(
@@ -120,7 +135,9 @@ def artwork(request, artwork_id):
 
     return render(request, "museum_site/artwork.html", {
         'provided_consent': True, 'page_id': 'art_' + artwork_id,
-        'artwork': art, 'artwork_rating': str(artwork_rating)
+        'artwork': art,
+        'artists': artists,
+        'artwork_rating': str(artwork_rating),
     })
 
 
@@ -136,18 +153,28 @@ def handle_render_home_page(request):
             | reduce(operator.or_, (Q(artist__icontains = x) for x in query.split(' ')))
             | reduce(operator.or_, (Q(medium__icontains=x) for x in query.split(' ')))
         )
+        # art = Artwork.objects.filter(
+        #     complex_query(query, "title") |
+        #     complex_query(query, "artist") |
+        #     complex_query(query, "medium")
+        # )
     else:
         art = Artwork.objects.all()
 
-    # art = Artwork.objects.order_by('?')[:5]
-    # art = Artwork.objects.all()[:5]
-    # art = Artwork.objects.all()
+    # Convert ot list
+    for e in art:
+        if e.artist:
+            if e.artist.find("unknown") != -1:
+                e.artist = ["Unknown artist"]
+            else:
+                e.artist = json.loads(e.artist)
+
     paginator = Paginator(art, 30)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     return render(request, 'museum_site/index.html', {
         'provided_consent': True, 'page_id': 'index',
-        'page_obj': page_obj
+        'page_obj': page_obj,
     })
 
 

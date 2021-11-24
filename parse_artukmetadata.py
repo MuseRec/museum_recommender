@@ -4,7 +4,7 @@ import json
 import django
 import numpy as np
 from dotenv import load_dotenv
-from uuid import uuid4
+from os.path import splitext
 
 from artukreader import artuk_record_parser
 
@@ -38,26 +38,26 @@ def artuk_metadata(file):
     list_meta = list()
     end = row_count(file)
     for idx, meta in enumerate(artuk_record_parser(file)):
-        for i in meta.index:
-            artwork = Artwork(
-                art_id=uuid4().hex,
-                collection=meta.loc[i, "Collection Name"],
-                classification=meta.loc[i, "Artwork Classification"],
-                title=meta.loc[i, 'Artwork Title'],
-                medium=to_json(meta.loc[i, "Medium"]),
-                artist=meta.loc[i, 'Artist Name'],
-                birth_date=check_nan(check_nan(meta.loc[i, "Artist Birth Date"])),
-                death_date=check_nan(meta.loc[i, "Artist Death Date"]),
-                earliest_date=check_nan(meta.loc[i, "Earliest Date"]),
-                latest_date=check_nan(meta.loc[i, "Latest Date"]),
-                image_credit=meta.loc[i, "Image Credit"],
-                linked_terms=to_json(meta.loc[i, "Linked Terms"]),
-                linked_topics=to_json(meta.loc[i, "Linked Topics"]),
-                linked_art_terms=meta.loc[i, "Linked Art Terms"],
-                img_file=meta.loc[i, "Filename"],
-                img_location=meta.loc[i, "Location"],
-            )
-            artwork.save()
+        filename = meta["Filename"].values[0]
+        artwork = Artwork(
+            art_id=splitext(filename)[0],
+            collection=meta["Collection Name"].values[0],
+            classification=meta["Artwork Classification"].values[0],
+            title=meta['Artwork Title'].values[0],
+            medium=to_json(meta["Medium"].values[0]),   # may contain multiple values
+            artist=to_json(meta['Artist Name'].values[0]),   # may contain multiple values
+            birth_date=to_json(meta["Artist Birth Date"].values[0]),   # may contain multiple values
+            death_date=to_json(meta["Artist Death Date"].values[0]),   # may contain multiple values
+            earliest_date=check_nan(meta["Earliest Date"].values[0]),
+            latest_date=check_nan(meta["Latest Date"].values[0]),
+            image_credit=meta["Image Credit"].values[0],
+            linked_terms=to_json(meta["Linked Terms"].values[0]),   # may contain multiple values
+            linked_topics=to_json(meta["Linked Topics"].values[0]),   # may contain multiple values
+            linked_art_terms=meta["Linked Art Terms"].values[0],
+            img_file=filename,
+            img_location=meta["Location"].values[0],
+        )
+        artwork.save()
 
         if (idx + 1) % 1000 == 0 or idx >= end:
             print(f"{idx + 1} artworks saved.")

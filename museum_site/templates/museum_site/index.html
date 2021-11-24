@@ -1,5 +1,7 @@
 {% extends "museum_site/base.html" %}
 
+{% load museum_site_extras %}
+
 {% block content %}
     {% load static %}
 
@@ -10,7 +12,8 @@
     <div class="search-bar">
         <form style="text-align: center; padding-left: 10%; padding-right: 10%;"  method="get">
             <input class="form-control mr-sm-2" style="display: inline-block; width: 80%;" type="search" placeholder="Search gallery" aria-label="Search" name="search">
-            <button class="btn btn-outline-secondary my-2 my-sm-0" style="display: inline-block; color: #ffffff; background-color: #724629" type="submit" onclick = "return interaction_event('search', '', '{{ page_id }}', '{{ csrf_token }}');">Search</button>
+            <button class="btn btn-outline-secondary my-2 my-sm-0" style="display: inline-block; color: #ffffff; background-color: #724629" type="submit"
+                    onclick = "return interaction_event('search', '', '{{ page_id }}', '{{ csrf_token }}');">Search</button>
         </form>
     </div>
 
@@ -31,13 +34,15 @@
                                     <a href = "{% url 'museum_site:artwork' art.art_id %}"
                                         onclick = "return interaction_event('click', '{{ art.art_id }}', '{{ page_id }}', '{{ csrf_token }}');">
                                         <img class = 'card-img-top' style="width: 150px; height: 180px; background-size: 300% 300%;" src = "{% static 'img/images/' %}{{ art.img_location }}"
-                                            alt = "{{ art.title }}" />
+                                            alt = '{{ art.title|cut:"'" }}' />
                                     </a>
                                 </div>
                             </div>
-                            <div><span class="text-description"><em>{{ art.title }}</em></span></div>
+                            <div><span class="text-description">{{ art.title|cut:"'" }}</span></div>
                             <div><hr class="full-separator tight"/></div>
-                            <div class="text-artist"><span class="text-description"><b>{{ art.artist }}</b></span></div>
+                            {% for artist in art.artist %}
+                                <div class="text-artist"><span class="text-description"><b>{{ artist }}</b></span></div>
+                            {%  endfor %}
                         </div>
                     {% empty %}
                         <p>No results match the search query</p>

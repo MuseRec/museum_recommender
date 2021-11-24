@@ -1,7 +1,11 @@
 html body {
     padding-top: 5rem;
     background-color: #f6e8d5;
-    font-family: MetSans,"Helvetica Neue",Helvetica,Arial,"Noto Sans SC","Noto Sans TC","Noto Sans JP","Noto Sans KR",sans-serif;
+    font-family: "Helvetica Neue",Helvetica,Arial,"Noto Sans SC","Noto Sans TC","Noto Sans JP","Noto Sans KR",sans-serif;
+    font-variant-ligatures: no-common-ligatures;
+    -moz-font-feature-settings: "liga" 0, "clig" 0;
+    -webkit-font-feature-settings: "liga" 0, "clig" 0;
+    font-feature-settings: "liga" 0, "clig" 0;
 }
 
 .signup-form {

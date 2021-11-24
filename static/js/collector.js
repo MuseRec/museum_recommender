@@ -10,8 +10,7 @@ function interaction_event(event_type, content_id, page_id, csrf_token) {
     $.ajax({
         type: "POST",
         // url: "interaction_logger",
-        url: "collector/log/", // corresponds to the log view in collector.views
-        // url: "logger/log/", // corresponds to the log view in collector.views
+        url: "/logger/log/", // corresponds to the log view in collector.views
         data: {
             "csrfmiddlewaretoken": csrf_token,
             "event_type": event_type, 

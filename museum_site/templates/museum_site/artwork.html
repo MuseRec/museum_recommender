@@ -14,7 +14,62 @@
 
             <hr class="full-separator"/>
 
-            <div><strong>Artist:</strong> {{ artwork.artist }}
+            {% if artists %}
+                <div><strong>Artists:</strong></div>
+                    <ul class="list">
+                        {% for e in artists %}
+                            <li>{{ e }}</li>
+                        {% endfor %}
+                    </ul>
+                <div>
+            {% else %}
+                {% if artwork.artist %}
+                <div>
+                    <strong>Artist:</strong>
+                    {% for idx, name in artwork.artist %}
+                        {% if idx > 0 %}
+                            <span>, </span>
+                        {% endif %}
+                        <span>{{ name }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if artwork.birth_date %}
+                <div>
+                    <strong>Born:</strong>
+                    {% for idx, date in artwork.birth_date %}
+                        {% if idx > 0 %}
+                        <span>, </span>
+                        {% endif %}
+                        <span>{{ date }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if artwork.death_date %}
+                <div><strong>Died:</strong>
+                    {% for idx, date in artwork.death_date %}
+                        {% if idx > 0 %}
+                            <span>, </span>
+                        {% endif %}
+                        <span>{{ date }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endif %}
+
+            {% if artwork.earliest_date and artwork.latest_date %}
+                {% if artwork.earliest_date == artwork.latest_date %}
+                    <div><strong>Year active:</strong> {{ artwork.earliest_date }}</div>
+                {%  else %}
+                    <div>
+                        <strong>Years active:</strong> {{ artwork.earliest_date }} &ndash; {{ artwork.latest_date }}
+                    </div>
+                {% endif %}
+            {% endif %}
+
+            <hr class="full-separator"/>
 
             {% if artwork.classification %}
                 <div><strong>Classification:</strong> {{ artwork.classification }}</div>

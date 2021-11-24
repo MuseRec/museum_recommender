@@ -48,10 +48,13 @@
 .text-description {
     color: #4f301d;
     font-size: 8pt;
+    line-: 0.5;
 }
 
 .text-artist {
     margin-left: 20px;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-weight: bold;
 }
 
 .tight {

@@ -6,11 +6,13 @@ import regex as re
 import csv
 import unittest
 import os
+import json
 # noinspection PyCompatibility
 from collections.abc import Collection
 from os.path import join, exists
 from datetime import date
 from functools import reduce, partial
+from itertools import product
 from typing import Tuple, TextIO
 # noinspection PyUnresolvedReferences
 from pprint import pprint
@@ -184,11 +186,10 @@ def artuk_record_parser(file, folder=None, **kwargs) -> pd.DataFrame:
         for _ in range(st):
             next(it)
 
-    # Check if multiple values with single cells can be parsed
     def __is_parse(c):
         c = np.array(c)
         f = (c == 1) | (c == 0)
-        if all(f):
+        if all(c == 0):
             raise ValueError("Empty array")
         # noinspection PyTypeChecker
         return all(c[~f][1:] == c[~f][0])
@@ -218,6 +219,29 @@ def artuk_record_parser(file, folder=None, **kwargs) -> pd.DataFrame:
     # Return either element of a sequence, first element if len == 1 or None
     def __extract(dct, size, is_size, key, val) -> object or None:
         return None if not is_size[key] else dct[key][0] if size[key] == 1 else dct[key][val]
+
+    def __split(x: str, char: str = " ") -> list:
+        if x is None: return
+        return list(filter(None, [_e.strip() for _e in x.split(char)]))
+
+    def __convert_names_to_list(f: str or None, s: str or None):
+        if (s is None or len(s) == 0) and (f is None or len(f) == 0):
+            return None
+        elif f is None or len(f) == 0:
+            out = __split(s)
+        elif s is None or len(s) == 0:
+            out = __split(f)
+        else:
+            ff, ss = __split(f, ";"), __split(s, ";")
+            if len(ff) != len(ss) and len(ss) == 1:
+                out = ["{} {}".format(a, b) for a, b in product(ff, ss)]
+            else:
+                out = ["{} {}".format(a, b) for a, b in zip(*[ff, ss])]
+        return ",".join(out)
+
+    def __convert_dates_to_list(d: str or None):
+        if d is None or len(d) == 0: return
+        return ",".join(__split(d, ";"))
 
     # Default options
     folder = "" if folder is None else folder
@@ -263,6 +287,20 @@ def artuk_record_parser(file, folder=None, **kwargs) -> pd.DataFrame:
             # Convert empty strings to None
             row_dict = {k: v if len(v) > 0 else None for k, v in csv_dict.items()}
 
+            # CSV contains records with multiple entries within single cells
+            if any(row_dict[e].find(";") != -1 for e in mv_columns if row_dict[e] is not None):
+                values = {
+                    k: [e.strip() for e in row_dict[k].split(";")] if row_dict[k] is not None else None
+                    for k in mv_columns
+                }
+                lengths = {k: len(v) if v is not None else 0 for k, v in values.items()}
+                n_lengths = np.array([v for _, v in lengths.items()])
+                if not __is_parse(n_lengths):
+                    skipped.append(row_dict)
+                    if verbose:
+                        print("Skipped {0} records".format(len(skipped)))
+                    continue
+
             db_dict["Collection Name"] = row_dict["Collection Name"]
             db_dict["Artwork Classification"] = row_dict["Artwork Classification"]
             db_dict["Artwork Title"] = row_dict["Artwork Title"]
@@ -285,72 +323,83 @@ def artuk_record_parser(file, folder=None, **kwargs) -> pd.DataFrame:
                     None if l_date is None else float(l_date),
                 )) if e is not None
             ])
+
             # Convert dates to float values (including NaNs)
             db_dict["Earliest Date"] = __return_nan(ex_date.min(initial=None) if ex_date.size > 0 else None)
             db_dict["Latest Date"] = __return_nan(ex_date.max(initial=None) if ex_date.size > 0 else None)
 
-            # CSV contains records with multiple entries within single cells
-            if any(row_dict[e].find(";") != -1 for e in mv_columns if row_dict[e] is not None):
-                values = {
-                    k: [e.strip() for e in row_dict[k].split(";")] if row_dict[k] is not None else None
-                    for k in mv_columns
-                }
-                lengths = {k: len(v) if v is not None else 0 for k, v in values.items()}
-                n_lengths = np.array([v for _, v in lengths.items()])
-                if not __is_parse(n_lengths):
-                    skipped.append(row_dict)
-                    if verbose:
-                        print("Skipped {0} records".format(len(skipped)))
-                    continue
-                # noinspection PyTypeChecker
-                if all(n_lengths[1:] == n_lengths[0]):
-                    for i in range(n_lengths[0]):
-                        db_dict["Artist Name"] = "{} {}".format(
-                            values["Artist Forename"][i], values["Artist Surname"][i]
-                        ).strip()
-                        db_dict["Artist Birth Date"] = __return_nan(
-                            __convert_if_numeric(values["Artist Birth Date"][i]))
-                        db_dict["Artist Death Date"] = __return_nan(
-                            __convert_if_numeric(values["Artist Death Date"][i]))
-                        df = df.append(pd.DataFrame(db_dict, index=[idx + offset]))
-                        offset += 1
-                    yield df
-                else:
-                    is_length = {k: v > 0 for k, v in lengths.items()}
-                    extract = partial(__extract, values, lengths, is_length)
-                    for i in range(n_lengths.max(initial=0)):
-                        db_dict["Artist Name"] = "{} {}".format(
-                            extract("Artist Forename", i),
-                            extract("Artist Surname", i),
-                        ).strip()
-                        db_dict["Artist Birth Date"] = __return_nan(
-                            __convert_if_numeric(extract("Artist Birth Date", i))
-                        )
-                        db_dict["Artist Death Date"] = __return_nan(
-                            __convert_if_numeric(extract("Artist Death Date", i))
-                        )
-                        df = df.append(pd.DataFrame(db_dict, index=[idx + offset]))
-                        offset += 1
-                    yield df
-                offset -= 1
-            else:
-                # Executed when values are regular
-                db_dict["Artist Name"] = "{} {}".format(
-                    row_dict["Artist Forename"], row_dict["Artist Surname"]
-                ).strip()
-                db_dict["Artist Birth Date"] = __return_nan(__convert_if_numeric(row_dict["Artist Birth Date"]))
-                db_dict["Artist Death Date"] = __return_nan(__convert_if_numeric(row_dict["Artist Death Date"]))
-                yield pd.DataFrame(db_dict, index=[idx + offset])
+            db_dict["Artist Name"] = __convert_names_to_list(row_dict["Artist Forename"], row_dict["Artist Surname"])
+
+            db_dict["Artist Birth Date"] = __convert_dates_to_list(row_dict["Artist Birth Date"])
+            db_dict["Artist Death Date"] = __convert_dates_to_list(row_dict["Artist Death Date"])
+
+            # # CSV contains records with multiple entries within single cells
+            # if any(row_dict[e].find(";") != -1 for e in mv_columns if row_dict[e] is not None):
+            #     values = {
+            #         k: [e.strip() for e in row_dict[k].split(";")] if row_dict[k] is not None else None
+            #         for k in mv_columns
+            #     }
+            #     lengths = {k: len(v) if v is not None else 0 for k, v in values.items()}
+            #     n_lengths = np.array([v for _, v in lengths.items()])
+            #     if not __is_parse(n_lengths):
+            #         skipped.append(row_dict)
+            #         if verbose:
+            #             print("Skipped {0} records".format(len(skipped)))
+            #         continue
+            #     # noinspection PyTypeChecker
+            #     if all(n_lengths[1:] == n_lengths[0]):
+            #         for i in range(n_lengths[0]):
+            #             db_dict["Artist Name"] = "{} {}".format(
+            #                 values["Artist Forename"][i], values["Artist Surname"][i]
+            #             ).strip()
+            #             db_dict["Artist Birth Date"] = __return_nan(
+            #                 __convert_if_numeric(values["Artist Birth Date"][i]))
+            #             db_dict["Artist Death Date"] = __return_nan(
+            #                 __convert_if_numeric(values["Artist Death Date"][i]))
+            #             df = df.append(pd.DataFrame(db_dict, index=[idx + offset]))
+            #             offset += 1
+            #         yield df
+            #     else:
+            #         is_length = {k: v > 0 for k, v in lengths.items()}
+            #         extract = partial(__extract, values, lengths, is_length)
+            #         for i in range(n_lengths.max(initial=0)):
+            #             db_dict["Artist Name"] = "{} {}".format(
+            #                 extract("Artist Forename", i),
+            #                 extract("Artist Surname", i),
+            #             ).strip()
+            #             db_dict["Artist Birth Date"] = __return_nan(
+            #                 __convert_if_numeric(extract("Artist Birth Date", i))
+            #             )
+            #             db_dict["Artist Death Date"] = __return_nan(
+            #                 __convert_if_numeric(extract("Artist Death Date", i))
+            #             )
+            #             df = df.append(pd.DataFrame(db_dict, index=[idx + offset]))
+            #             offset += 1
+            #         yield df
+            #     offset -= 1
+            # else:
+            #     # Executed when values are regular
+            #     db_dict["Artist Name"] = "{} {}".format(
+            #         row_dict["Artist Forename"], row_dict["Artist Surname"]
+            #     ).strip()
+            #     db_dict["Artist Birth Date"] = __return_nan(__convert_if_numeric(row_dict["Artist Birth Date"]))
+            #     db_dict["Artist Death Date"] = __return_nan(__convert_if_numeric(row_dict["Artist Death Date"]))
+            #     yield pd.DataFrame(db_dict, index=[idx + offset])
+
+            yield pd.DataFrame(db_dict, index=[idx + offset])
+
             idx += 1
+
     if verbose:
         print(skipped)
 
 
 # Tests
+#   python -m unittest artukreader.TestArtUKReader
 class TestArtUKReader(unittest.TestCase):
     old_umask = None
     # folder = "artwork_metadata"
-    # csv_file = "ArtUK_main_sample.csv"
+    # csv_file = "ArtUK_main_sample_locations.csv"
     header = "|".join([
         "Collection Name",
         "Artwork Classification",
@@ -369,6 +418,7 @@ class TestArtUKReader(unittest.TestCase):
         "Linked Topics",
         "Linked Art Terms",
         "Filename",
+        "Location",
     ])
     csv_tests = {
         "csv_regular": "|".join([
@@ -389,6 +439,7 @@ class TestArtUKReader(unittest.TestCase):
             "",
             "",
             "WYL_LMG_036_12-001.jpg",
+            "WYL_LMG_036_12-001.jpg",
         ]),
         "csv_mv_equal_length": "|".join([
             "Leeds Museums",
@@ -407,6 +458,7 @@ class TestArtUKReader(unittest.TestCase):
             "Branch, Sky, Landscape",
             "",
             "",
+            "WYL_LMG_036_12-001.jpg",
             "WYL_LMG_036_12-001.jpg",
         ]),
         "csv_mv_not_equal_length1": "|".join([
@@ -427,6 +479,7 @@ class TestArtUKReader(unittest.TestCase):
             "",
             "",
             "WYL_LMG_036_12-001.jpg",
+            "WYL_LMG_036_12-001.jpg",
         ]),
         "csv_mv_not_equal_length2": "|".join([
             "Leeds Museums",
@@ -446,6 +499,7 @@ class TestArtUKReader(unittest.TestCase):
             "",
             "",
             "WYL_LMG_036_12-001.jpg",
+            "WYL_LMG_036_12-001.jpg",
         ]),
         "csv_mv_not_equal_length3": "|".join([
             "Leeds Museums",
@@ -464,6 +518,7 @@ class TestArtUKReader(unittest.TestCase):
             "Branch, Sky, Landscape",
             "",
             "",
+            "WYL_LMG_036_12-001.jpg",
             "WYL_LMG_036_12-001.jpg",
         ]),
     }
@@ -489,84 +544,80 @@ class TestArtUKReader(unittest.TestCase):
         csv_iter = artuk_record_parser(file)
         return next(csv_iter)
 
-    # def testCsvFileExists(self):
-    #     the_file = join(self.folder, self.csv_file)
-    #     self.assertTrue(exists(the_file), msg="Missing {}".format(the_file))
-
     # Test of correct names
     def testRegularRecord(self):
         df = TestArtUKReader.return_df(self.test_files[0] + ".csv")
-        # print(df.loc[:, ["Artist Name", "Artist Birth Date", "Artist Death Date"]])
-        self.assertTrue(df.shape == (1, 14), "Wrong # of columns")
+        print(df.loc[:, ["Artist Name", "Artist Birth Date", "Artist Death Date"]])
+        self.assertTrue(df.shape == (1, 15), "Wrong # of columns")
         self.assertTrue(df.loc[0, "Artist Name"] == "XXX AAA")
 
-    # Test of multiple entries whose a number of elements is the same across
-    # multiple cells
-    def testMultipleRecordEqualLength(self):
-        df = TestArtUKReader.return_df(self.test_files[1] + ".csv")
-        self.assertTrue(df.shape == (3, 14), "Wrong # of columns")
-        self.assertEqual(
-            tuple(df.loc[0, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
-            ("XXX AAA", 1815.0, 1893.0)
-        )
-        self.assertEqual(
-            tuple(df.loc[1, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
-            ("YYY BBB", 1798.0, 1881.0)
-        )
-        self.assertEqual(
-            tuple(df.loc[2, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
-            ("ZZZ CCC", 1745.0, 1820.0)
-        )
-
-    # Tests of multiple entries whose a number of elements is not the same across
-    # multiple cells.
-    def testMultipleRecordNotEqualLength1(self):
-        df = TestArtUKReader.return_df(self.test_files[2] + ".csv")
-        # print(df.loc[:, ["Artist Name", "Artist Birth Date", "Artist Death Date"]])
-        self.assertTrue(df.shape == (3, 14), "Wrong # of columns")
-        self.assertEqual(
-            tuple(df.loc[0, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
-            ("XXX AAA", 1815.0, 1893.0)
-        )
-        self.assertEqual(
-            tuple(df.loc[1, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
-            ("YYY BBB", 1815.0, 1893.0)
-        )
-        self.assertEqual(
-            tuple(df.loc[2, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
-            ("ZZZ CCC", 1815.0, 1893.0)
-        )
-
-    def testMultipleRecordNotEqualLength2(self):
-        df = TestArtUKReader.return_df(self.test_files[3] + ".csv")
-        # print(df.loc[:, ["Artist Name", "Artist Birth Date", "Artist Death Date"]])
-        self.assertTrue(df.shape == (2, 14), "Wrong # of columns")
-        self.assertEqual(
-            tuple(df.loc[0, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
-            ("XXX AAA", 1815.0, 1893.0)
-        )
-        self.assertEqual(
-            tuple(df.loc[1, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
-            ("XXX AAA", 1798.0, 1893.0)
-        )
-
-    def testMultipleRecordNotEqualLength3(self):
-        df = TestArtUKReader.return_df(self.test_files[4] + ".csv")
-        # print(df.loc[:, ["Artist Name", "Artist Birth Date", "Artist Death Date"]])
-        self.assertTrue(df.shape == (4, 14), "Wrong # of columns")
-        self.assertEqual(
-            tuple(df.loc[0, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
-            ("XXX AAA", 1815.0, 1893.0)
-        )
-        self.assertEqual(
-            tuple(df.loc[1, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
-            ("XXX AAA", 1815.0, 1881.0)
-        )
-        self.assertEqual(
-            tuple(df.loc[2, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
-            ("XXX AAA", 1815.0, 1901.0)
-        )
-        self.assertEqual(
-            tuple(df.loc[3, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
-            ("XXX AAA", 1815.0, 1905.0)
-        )
+    # # Test of multiple entries whose a number of elements is the same across
+    # # multiple cells
+    # def testMultipleRecordEqualLength(self):
+    #     df = TestArtUKReader.return_df(self.test_files[1] + ".csv")
+    #     self.assertTrue(df.shape == (3, 14), "Wrong # of columns")
+    #     self.assertEqual(
+    #         tuple(df.loc[0, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
+    #         ("XXX AAA", 1815.0, 1893.0)
+    #     )
+    #     self.assertEqual(
+    #         tuple(df.loc[1, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
+    #         ("YYY BBB", 1798.0, 1881.0)
+    #     )
+    #     self.assertEqual(
+    #         tuple(df.loc[2, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
+    #         ("ZZZ CCC", 1745.0, 1820.0)
+    #     )
+    #
+    # # Tests of multiple entries whose a number of elements is not the same across
+    # # multiple cells.
+    # def testMultipleRecordNotEqualLength1(self):
+    #     df = TestArtUKReader.return_df(self.test_files[2] + ".csv")
+    #     # print(df.loc[:, ["Artist Name", "Artist Birth Date", "Artist Death Date"]])
+    #     self.assertTrue(df.shape == (3, 14), "Wrong # of columns")
+    #     self.assertEqual(
+    #         tuple(df.loc[0, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
+    #         ("XXX AAA", 1815.0, 1893.0)
+    #     )
+    #     self.assertEqual(
+    #         tuple(df.loc[1, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
+    #         ("YYY BBB", 1815.0, 1893.0)
+    #     )
+    #     self.assertEqual(
+    #         tuple(df.loc[2, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
+    #         ("ZZZ CCC", 1815.0, 1893.0)
+    #     )
+    #
+    # def testMultipleRecordNotEqualLength2(self):
+    #     df = TestArtUKReader.return_df(self.test_files[3] + ".csv")
+    #     # print(df.loc[:, ["Artist Name", "Artist Birth Date", "Artist Death Date"]])
+    #     self.assertTrue(df.shape == (2, 14), "Wrong # of columns")
+    #     self.assertEqual(
+    #         tuple(df.loc[0, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
+    #         ("XXX AAA", 1815.0, 1893.0)
+    #     )
+    #     self.assertEqual(
+    #         tuple(df.loc[1, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
+    #         ("XXX AAA", 1798.0, 1893.0)
+    #     )
+    #
+    # def testMultipleRecordNotEqualLength3(self):
+    #     df = TestArtUKReader.return_df(self.test_files[4] + ".csv")
+    #     # print(df.loc[:, ["Artist Name", "Artist Birth Date", "Artist Death Date"]])
+    #     self.assertTrue(df.shape == (4, 14), "Wrong # of columns")
+    #     self.assertEqual(
+    #         tuple(df.loc[0, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
+    #         ("XXX AAA", 1815.0, 1893.0)
+    #     )
+    #     self.assertEqual(
+    #         tuple(df.loc[1, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
+    #         ("XXX AAA", 1815.0, 1881.0)
+    #     )
+    #     self.assertEqual(
+    #         tuple(df.loc[2, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
+    #         ("XXX AAA", 1815.0, 1901.0)
+    #     )
+    #     self.assertEqual(
+    #         tuple(df.loc[3, ["Artist Name", "Artist Birth Date", "Artist Death Date"]]),
+    #         ("XXX AAA", 1815.0, 1905.0)
+    #     )
