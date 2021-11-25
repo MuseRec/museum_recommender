@@ -143,8 +143,9 @@ def artwork(request, artwork_id):
 
 def handle_render_home_page(request):
     # if there is a search request
+    query = None
     if request.GET.get('search'):
-        query = request.GET.get('search')
+        query = request.GET.get('search').strip()
         art = Artwork.objects.filter(
             Q(title__icontains=query)
             | Q(artist__icontains=query)
@@ -175,6 +176,7 @@ def handle_render_home_page(request):
     return render(request, 'museum_site/index.html', {
         'provided_consent': True, 'page_id': 'index',
         'page_obj': page_obj,
+        'search': None if query is None or len(query) == 0 else query,
     })
 
 

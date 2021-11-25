@@ -9,11 +9,15 @@
 
     {% include 'museum_site/demographic_form.html' %}
 
-    <div class="search-bar">
-        <form style="text-align: center; padding-left: 10%; padding-right: 10%;"  method="get">
+    <div class="search-bar" style="position: relative; top: -3px;">
+        <form style="text-align: center; top: 0; padding: 0 10% 0 10%"  method="get">
             <input class="form-control mr-sm-2" style="display: inline-block; width: 80%;" type="search" placeholder="Search gallery" aria-label="Search" name="search">
-            <button class="btn btn-outline-secondary my-2 my-sm-0" style="display: inline-block; color: #ffffff; background-color: #724629" type="submit"
+            <button class="btn btn-outline-secondary my-2 my-sm-0" style="display: inline-block; color: #ffffff; background-color: #724629"
+                    type="submit"
                     onclick = "return interaction_event('search', '', '{{ page_id }}', '{{ csrf_token }}');">Search</button>
+            <button class="btn btn-outline-secondary my-2 my-sm-0" style="display: inline-block; color: #ffffff; background-color: #724629; margin-left: 5px;"
+                    type="submit"
+                    onclick = "return interaction_event('clear', '', '{{ page_id }}', '{{ csrf_token }}');">Clear</button>
         </form>
     </div>
 
@@ -21,7 +25,9 @@
         <span class="text-title">List of artworks</span>
     </div>
 
-    <hr class="separator"/>
+    {% include 'museum_site/paging.html' %}
+
+    <hr class="separator" />
 
     <div class = 'container my-4'>
         <div id = 'multi-item-example' class = 'carousel slide carousel-multi-item' data-ride = 'carousel'>
@@ -45,7 +51,7 @@
                             {%  endfor %}
                         </div>
                     {% empty %}
-                        <p>No results match the search query</p>
+                        <span style="margin-left: auto; margin-right: auto">No results match the search query</span>
                     {% endfor %}
                 </div>
             </div>
@@ -54,28 +60,18 @@
 
     <hr class="separator"/>
 
-    <div class = 'pagination'>
-        <span class = 'step-links' style="margin-left: auto; margin-right: auto;">
-            {% if page_obj.has_previous %}
-                <a href = "?page=1" onclick = "return interaction_event('click', 'first_page', '{{ page_id }}', '{{ csrf_token }}');">&laquo; first</a>
-                <a href = "?page={{ page_obj.previous_page_number }}" onclick = "return interaction_event('click', 'prev_page_{{ page_obj.previous_page_number }}', '{{ page_id }}', '{{ csrf_token }}');">previous</a>
-            {% endif %}
+    {% if page_obj.paginator.num_pages > 1 %}
 
-            <span class = 'current'>
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-            </span>
+        {% include 'museum_site/paging.html' %}
 
-            {% if page_obj.has_next %}
-                <a href = "?page={{ page_obj.next_page_number }}" onclick = "return interaction_event('click', 'next_page_{{ page_obj.next_page_number }}', '{{ page_id }}', '{{ csrf_token }}');">next</a>
-                <a href = "?page={{ page_obj.paginator.num_pages }}" onclick = "return interaction_event('click', 'last_page', '{{ page_id }}', '{{ csrf_token }}');">last &raquo;</a>
-            {% endif %}
-        </span>
-    </div>
-
-    <div class="search-bar-bottom">
-        <form style="text-align: center; padding-left: 10%; padding-right: 10%;"  method="get">
-            <input class="form-control mr-sm-2" style="display: inline-block; width: 80%;" type="search" placeholder="Search gallery" aria-label="Search" name="search">
-            <button class="btn btn-outline-secondary my-2 my-sm-0" style="display: inline-block; color: #ffffff; background-color: #724629" type="submit" onclick = "return interaction_event('search', '', '{{ page_id }}', '{{ csrf_token }}');">Search</button>
-        </form>
-    </div>
+        <div class="search-bar-bottom">
+            <form style="text-align: center; padding-left: 10%; padding-right: 10%;"  method="get">
+                <input class="form-control mr-sm-2" style="display: inline-block; width: 80%;" type="search" placeholder="Search gallery" aria-label="Search" name="search">
+                <button class="btn btn-outline-secondary my-2 my-sm-0" style="display: inline-block; color: #ffffff; background-color: #724629" type="submit" onclick = "return interaction_event('search', '', '{{ page_id }}', '{{ csrf_token }}');">Search</button>
+                <button class="btn btn-outline-secondary my-2 my-sm-0" style="display: inline-block; color: #ffffff; background-color: #724629; margin-left: 5px;"
+                        type="submit"
+                        onclick = "return interaction_event('clear', '', '{{ page_id }}', '{{ csrf_token }}');">Clear</button>
+            </form>
+        </div>
+    {% endif %}
 {% endblock content %}
