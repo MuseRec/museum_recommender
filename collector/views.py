@@ -7,6 +7,7 @@ from museum_site.views import index
 from museum_site.models import User
 from .models import Interaction
 
+
 @ensure_csrf_cookie
 def log(request):
     if request.method == 'POST':        
@@ -21,11 +22,12 @@ def log(request):
         interaction_event.save()
 
         if request.POST['content_id'] == 'home-button':
-            return redirect('index')
+            return redirect('museum_site:index')
 
         return HttpResponse('ok')
     else:
         return HttpResponseBadRequest('log only works with POST')
+
 
 @ensure_csrf_cookie
 def page(request):

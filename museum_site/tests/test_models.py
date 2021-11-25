@@ -3,6 +3,7 @@ from django.utils import timezone
 
 from museum_site.models import User, UserDemographic
 
+
 class UserTest(TestCase):
     def setUp(self) -> None:
         User.objects.create(
@@ -16,7 +17,8 @@ class UserTest(TestCase):
         self.assertEqual(test_user.consent, True)
         self.assertEqual(test_user.email, 'test@email.com')
         self.assertEqual(test_user.contact_outcome, False)
-    
+
+
 class UserDemographicTest(TestCase):
     def setUp(self) -> None:
         User.objects.create(
@@ -47,8 +49,10 @@ class UserDemographicTest(TestCase):
         # assert that the user doesn't exists in the demographic database
         self.assertFalse(UserDemographic.objects.filter(user_id = 'user_1234').exists())
 
+
 class ArtworkTest(TestCase):
     pass 
+
 
 class ArtworkVisitedTest(TestCase):
     pass

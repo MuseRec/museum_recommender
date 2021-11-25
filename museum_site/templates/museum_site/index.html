@@ -1,26 +1,48 @@
 {% extends "museum_site/base.html" %}
 
+{% load museum_site_extras %}
+
 {% block content %}
+    {% load static %}
 
     {% include 'museum_site/information_sheet.html' %}
 
     {% include 'museum_site/demographic_form.html' %}
 
+    <div class="search-bar">
+        <form style="text-align: center; padding-left: 10%; padding-right: 10%;"  method="get">
+            <input class="form-control mr-sm-2" style="display: inline-block; width: 80%;" type="search" placeholder="Search gallery" aria-label="Search" name="search">
+            <button class="btn btn-outline-secondary my-2 my-sm-0" style="display: inline-block; color: #ffffff; background-color: #724629" type="submit"
+                    onclick = "return interaction_event('search', '', '{{ page_id }}', '{{ csrf_token }}');">Search</button>
+        </form>
+    </div>
+
+    <div style="text-align: center; padding: 20px;">
+        <span class="text-title">List of artworks</span>
+    </div>
+
+    <hr class="separator"/>
+
     <div class = 'container my-4'>
         <div id = 'multi-item-example' class = 'carousel slide carousel-multi-item' data-ride = 'carousel'>
             <div class = 'carousel-inner' role = 'listbox'>
-                <div class = 'row'>
+                <div class='row'>
                     {% for art in page_obj %}
-                        <div class = 'col-md-2'>
+                        <div class = 'col-md-2' style="padding-top: 20px; padding-bottom: 20px;">
                             <div class = 'card mb-2' id = 'artwork-card'>
-                                <div class = 'artwork-img-style'>
-                                    <a href = "{% url 'artwork' art.art_id %}"
+                                <div class='artwork-img-style'>
+                                    <a href = "{% url 'museum_site:artwork' art.art_id %}"
                                         onclick = "return interaction_event('click', '{{ art.art_id }}', '{{ page_id }}', '{{ csrf_token }}');">
-                                        <img class = 'card-img-top' src = "{{ art.img_thumbnail_url }}"
-                                            alt = "{{ art.title }}" />
+                                        <img class = 'card-img-top' style="width: 150px; height: 180px; background-size: 300% 300%;" src = "{% static 'img/images/' %}{{ art.img_location }}"
+                                            alt = '{{ art.title|cut:"'" }}' />
                                     </a>
                                 </div>
                             </div>
+                            <div><span class="text-description">{{ art.title|cut:"'" }}</span></div>
+                            <div><hr class="full-separator tight"/></div>
+                            {% for artist in art.artist %}
+                                <div class="text-artist"><span class="text-description"><b>{{ artist }}</b></span></div>
+                            {%  endfor %}
                         </div>
                     {% empty %}
                         <p>No results match the search query</p>
@@ -30,8 +52,10 @@
         </div>
     </div>
 
+    <hr class="separator"/>
+
     <div class = 'pagination'>
-        <span class = 'step-links'>
+        <span class = 'step-links' style="margin-left: auto; margin-right: auto;">
             {% if page_obj.has_previous %}
                 <a href = "?page=1" onclick = "return interaction_event('click', 'first_page', '{{ page_id }}', '{{ csrf_token }}');">&laquo; first</a>
                 <a href = "?page={{ page_obj.previous_page_number }}" onclick = "return interaction_event('click', 'prev_page_{{ page_obj.previous_page_number }}', '{{ page_id }}', '{{ csrf_token }}');">previous</a>
@@ -46,5 +70,12 @@
                 <a href = "?page={{ page_obj.paginator.num_pages }}" onclick = "return interaction_event('click', 'last_page', '{{ page_id }}', '{{ csrf_token }}');">last &raquo;</a>
             {% endif %}
         </span>
+    </div>
+
+    <div class="search-bar-bottom">
+        <form style="text-align: center; padding-left: 10%; padding-right: 10%;"  method="get">
+            <input class="form-control mr-sm-2" style="display: inline-block; width: 80%;" type="search" placeholder="Search gallery" aria-label="Search" name="search">
+            <button class="btn btn-outline-secondary my-2 my-sm-0" style="display: inline-block; color: #ffffff; background-color: #724629" type="submit" onclick = "return interaction_event('search', '', '{{ page_id }}', '{{ csrf_token }}');">Search</button>
+        </form>
     </div>
 {% endblock content %}

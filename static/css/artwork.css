@@ -1,5 +1,4 @@
 .artwork-body {
-    margin-top: 20px;
 }
 
 .expandable-content a.collapsed:after {
@@ -45,4 +44,33 @@
 
 .rating:hover>input:checked~label:before {
     opacity: 0.4
+}
+
+
+.list {
+    margin-left: 0;
+    padding-left: 1.5em;
+    margin-bottom: 0;
+}
+.list li {
+    list-style: none;
+}
+
+.full-separator {
+    display: block;
+    margin-right: 20px;
+    margin-left: 0;
+    overflow: hidden;
+    border: none;
+    height: 0.5px;
+    /* Set the hr color */
+    color: #d39669; /* old IE */
+    background-color: #c9a182; /* Modern Browsers */
+}
+
+.col div {
+    padding-top: 6pt;
+}
+.full-separator + div {
+    padding-top: 0;
 }

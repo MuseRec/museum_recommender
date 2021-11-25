@@ -5,8 +5,8 @@ from django.urls import reverse
 from collector.models import Interaction
 from museum_site.models import User
 
-class LogViewTest(TestCase):
 
+class LogViewTest(TestCase):
     def setUp(self) -> None:
         self.user = User.objects.create(
             user_id = 'user_1234', consent = True, email = 'test@email.com',
@@ -17,12 +17,12 @@ class LogViewTest(TestCase):
         session.save()
 
     def test_get_response(self):
-        response = self.client.get(reverse('interaction_logger'))
+        response = self.client.get(reverse('collector:interaction_logger'))
         self.assertEqual(response.status_code, 400)
         
     def test_post_request_object_created(self):
         response_post = self.client.post(
-            reverse('interaction_logger'),
+            reverse('collector:interaction_logger'),
             data = {
                 'content_id': 'artwork_1234', 'event_type': 'click', 'page_id': 'index'
             }
@@ -37,7 +37,7 @@ class LogViewTest(TestCase):
 
     def test_post_request_when_event_is_home_button(self):
         response_post = self.client.post(
-            reverse('interaction_logger'),
+            reverse('collector:interaction_logger'),
             data = {
                 'content_id': 'home-button', 'event_type': 'click', 'page_id': 'index'
             },
@@ -45,6 +45,6 @@ class LogViewTest(TestCase):
         )
         self.assertEqual(response_post.status_code, 200)
         self.assertRedirects(
-            response_post, expected_url = reverse('index'), 
+            response_post, expected_url = reverse('museum_site:index'),
             status_code=302
         )
