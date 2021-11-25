@@ -32,10 +32,10 @@ $ mysql -u root -p
 
 **You already have MySQL installed, so start from this point**
 
-We should probably delete the old database created when you first went through this tutorial. To do so, follow these commands (make sure you're logged into your MySQL instance):
+We should probably delete the old database created when you first went through this tutorial (if the user was set up, there's is no need to delete the user too when you just want to flush the DB). To do so, follow these commands (make sure you're logged into your MySQL instance):
 ```bash
-mysql> drop database muse_recsys_db;
-mysql> drop user 'muse_recsys_user'@'localhost';
+mysql> drop database museum_recsys_db;
+mysql> drop user 'museum_db_user'@'localhost';
 ```
 
 The above will have deleted both the original database and the user. To check it's worked, run the following (`muse_recsys_db` should have disappeared):
@@ -48,11 +48,11 @@ Now we can create a new database and user for the web app to work from:
 ```bash
 mysql> create database museum_recsys_db;
 mysql> create user 'museum_db_user'@'localhost' identified with mysql_native_password by 'password';
-mysql> grant all privileges on * . * to 'muse_recsys_user'@'localhost';
+mysql> grant all privileges on * . * to 'museum_db_user'@'localhost';
 mysql> flush privileges;
 mysql> \q
 ```
-
+Should you struggle to grant privileges to 'museum_db_user' log into mySQL as root and then you'll be able to do so.
 The commands above should have created a new database, a new user with admin privileges, and then quit out of the `mysql` console. You can check that it's worked by doing the following (the password is what I said in the iMessage):
 
 ```bash
@@ -173,6 +173,10 @@ To run the script, do the following (the directory where the script is located):
 
 ```bash
 (venv) $ python parse_metadata.py
+```
+In case of ARTUK run:
+```bash
+(venv) $ python parse_artukmetadata.py
 ```
 
 If you start seeing an incremental counter, then it's working!
