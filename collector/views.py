@@ -21,7 +21,7 @@ def log(request):
         # print(interaction_event)
         interaction_event.save()
 
-        if request.POST['content_id'] == 'home-button':
+        if request.POST['content_id'] == 'home-button' or request.POST['content_id'] == 'clear':
             return redirect('museum_site:index')
 
         return HttpResponse('ok')
