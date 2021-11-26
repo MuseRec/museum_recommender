@@ -4,7 +4,10 @@
 *.json 
 *.csv
 *.pickle 
-*.p 
+*.p
+*.jpg
+*.jpeg
+*.png
 
 
 # Byte-compiled / optimized / DLL files
