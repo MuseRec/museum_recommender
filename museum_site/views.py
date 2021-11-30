@@ -166,13 +166,15 @@ def handle_render_home_page(request):
     for e in art:
         if e.artist:
             if e.artist.find("unknown") != -1:
-                e.artist = ["Unknown artist"]
+                # e.artist = ["Unknown artist"]
+                e.artist = "Unknown artist"
             else:
-                e.artist = json.loads(e.artist)
+                e.artist = ", ".join(json.loads(e.artist))
 
-    paginator = Paginator(art, 30)
+    paginator = Paginator(art, 15)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
     return render(request, 'museum_site/index.html', {
         'provided_consent': True, 'page_id': 'index',
         'page_obj': page_obj,
