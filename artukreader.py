@@ -228,9 +228,9 @@ def artuk_record_parser(file, folder=None, **kwargs) -> pd.DataFrame:
         if (s is None or len(s) == 0) and (f is None or len(f) == 0):
             return None
         elif f is None or len(f) == 0:
-            out = __split(s)
+            out = __split(s, ";")
         elif s is None or len(s) == 0:
-            out = __split(f)
+            out = __split(f, ";")
         else:
             ff, ss = __split(f, ";"), __split(s, ";")
             if len(ff) != len(ss) and len(ss) == 1:
