@@ -79,51 +79,38 @@
                 <div><strong>Collection:</strong> {{ artwork.collection }}</div>
             {% endif %}
 
-            {% if artwork.linked_topics %}
-                <div><strong>Topics:</strong></div>
-                <ul class="list">
-                    {% for topic in artwork.linked_topics %}
-                        <li>{{ topic }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-
-            {% if artwork.linked_terms %}
-                <div><strong>Terms:</strong></div>
-                <ul class="list">
-                    {% for term in artwork.linked_terms %}
-                        <li>{{ term }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-
-            {% if artwork.medium %}
-                <div><strong>Medium:</strong></div>
-                <ul class="list">
-                    {% for medium in artwork.medium %}
-                        <li>{{ medium }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-
-            {% comment %}
+            {% comment %}Show the button "Show More" and details only if this content exists{% endcomment %}
+            {% if artwork.linked_topics or artwork.linked_terms or artwork.medium %}
                 <div class='expandable-content'>
                     <div id='more-content' class='collapse in' aria-expanded='false'>
-                        {% if artwork.culture %}
-                            <p><strong>Culture:</strong></p>
-                            <ul>
-                                {% for culture in artwork.culture %}
-                                    <li>{{ culture|title }}</li>
+                        {% if artwork.linked_topics %}
+                            <div><strong>Topics:</strong></div>
+                            <ul class="list">
+                                {% for topic in artwork.linked_topics %}
+                                    <li>{{ topic }}</li>
                                 {% endfor %}
                             </ul>
                         {% endif %}
-                        {% if artwork.notes %}
-                            <strong>Notes:</strong>
-                            {% for note in artwork.notes %}
-                                <p>{{ note }}</p>
-                            {% endfor %}
+
+                        {% if artwork.linked_terms %}
+                            <div><strong>Terms:</strong></div>
+                            <ul class="list">
+                                {% for term in artwork.linked_terms %}
+                                    <li>{{ term }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+
+                        {% if artwork.medium %}
+                            <div><strong>Medium:</strong></div>
+                            <ul class="list">
+                                {% for medium in artwork.medium %}
+                                    <li>{{ medium }}</li>
+                                {% endfor %}
+                            </ul>
                         {% endif %}
                     </div>
+                    <br />
                     <a role="button" class="collapsed" id='show-more-button'
                        data-toggle="collapse" aria-expanded="false" aria-controls="more-content"
                        href="#more-content"
@@ -134,7 +121,7 @@
                                '{{ csrf_token }}'
                                );"></a>
                 </div>
-            {% endcomment %}
+            {% endif %}
 
             <hr class="full-separator"/>
 
