@@ -46,18 +46,19 @@
 }
 
 .text-description {
-    color: #4f301d;
-    font-size: 8pt;
-    line-: 0.5;
+    color: var(--text-artwork-color);
+    font-size: 9pt;
 }
 
 .text-artist {
-    margin-left: 20px;
+    /*margin-left: 20px;*/
+    color: var(--text-artwork-color);
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     font-weight: bold;
+    font-size: 9pt;
 }
 
 .tight {
-    margin: 0;
-    padding: 0;
+    margin: 8px 0 8px 0;
+    padding: 0 0 0 0;
 }

@@ -10,24 +10,10 @@
     {% include 'museum_site/demographic_form.html' %}
 
     <div class="search-bar" style="position: relative; top: -3px;">
-        <form style="text-align: center; top: 0; padding: 0 10% 0 10%"  method="get">
-            <input class="form-control mr-sm-2" style="display: inline-block; width: 80%;" type="search" placeholder="Search gallery" aria-label="Search" name="search">
-            <button class="btn btn-outline-secondary my-2 my-sm-0" style="display: inline-block; color: #ffffff; background-color: #724629"
-                    type="submit"
-                    onclick = "return interaction_event('search', '', '{{ page_id }}', '{{ csrf_token }}');">Search</button>
-            <button class="btn btn-outline-secondary my-2 my-sm-0" style="display: inline-block; color: #ffffff; background-color: #724629; margin-left: 5px;"
-                    type="submit"
-                    onclick = "return interaction_event('clear', '', '{{ page_id }}', '{{ csrf_token }}');">Clear</button>
-        </form>
+        {% include 'museum_site/searchbar.html' %}
     </div>
 
-    <div style="text-align: center; padding: 20px;">
-        <span class="text-title">List of artworks</span>
-    </div>
-
-    {% include 'museum_site/paging.html' %}
-
-    <hr class="separator" />
+    <hr class="separator"/>
 
     <div class = 'container my-4'>
         <div id = 'multi-item-example' class = 'carousel slide carousel-multi-item' data-ride = 'carousel'>
@@ -45,10 +31,17 @@
                                 </div>
                             </div>
                             <div><span class="text-description">{{ art.title|cut:"'" }}</span></div>
-                            <div><hr class="full-separator tight"/></div>
-                            {% for artist in art.artist %}
-                                <div class="text-artist"><span class="text-description"><b>{{ artist }}</b></span></div>
-                            {%  endfor %}
+                            <div><hr class="separator tight"/></div>
+                            <!-- Displays multiple artists as comma separated lists -->
+                            <div class="text-artist" style="display: block;">{{ art.artist }}</div>
+                            <!-- Displays multiple artists in separated lines -->
+                            {% comment %}
+                                {% for artist in art.artist %}
+                                    <div class="text-artist">
+                                        {{ artist }}
+                                    </div>
+                                {%  endfor %}
+                            {% endcomment %}
                         </div>
                     {% empty %}
                         <span style="margin-left: auto; margin-right: auto">No results match the search query</span>
@@ -65,13 +58,7 @@
         {% include 'museum_site/paging.html' %}
 
         <div class="search-bar-bottom">
-            <form style="text-align: center; padding-left: 10%; padding-right: 10%;"  method="get">
-                <input class="form-control mr-sm-2" style="display: inline-block; width: 80%;" type="search" placeholder="Search gallery" aria-label="Search" name="search">
-                <button class="btn btn-outline-secondary my-2 my-sm-0" style="display: inline-block; color: #ffffff; background-color: #724629" type="submit" onclick = "return interaction_event('search', '', '{{ page_id }}', '{{ csrf_token }}');">Search</button>
-                <button class="btn btn-outline-secondary my-2 my-sm-0" style="display: inline-block; color: #ffffff; background-color: #724629; margin-left: 5px;"
-                        type="submit"
-                        onclick = "return interaction_event('clear', '', '{{ page_id }}', '{{ csrf_token }}');">Clear</button>
-            </form>
+            {% include 'museum_site/searchbar.html' %}
         </div>
     {% endif %}
 {% endblock content %}
