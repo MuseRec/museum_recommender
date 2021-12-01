@@ -10,6 +10,8 @@ from django.db.models import Q
 import uuid
 import operator
 import json
+import re
+import pyparsing as pp
 from functools import reduce
 
 from .forms import UserForm, UserDemographicForm
@@ -141,19 +143,47 @@ def artwork(request, artwork_id):
     })
 
 
-def handle_render_home_page(request):
+def handle_render_home_page(request, *args):
     # if there is a search request
+    query_error = None
+
     query = None
     if request.GET.get('search'):
         query = request.GET.get('search').strip()
-        art = Artwork.objects.filter(
-            Q(title__icontains=query)
-            | Q(artist__icontains=query)
-            | Q(medium__icontains=query)
-            | reduce(operator.or_, (Q(title__icontains = x) for x in query.split(' ')))
-            | reduce(operator.or_, (Q(artist__icontains = x) for x in query.split(' ')))
-            | reduce(operator.or_, (Q(medium__icontains=x) for x in query.split(' ')))
-        )
+
+    if query is not None and len(query) > 0:
+        try:
+            query_list = query_parser(query).as_list()
+            display_in_query = list(
+                filter(
+                    lambda k: len(k) == 2 and k[0].find("display") != -1,
+                    squeeze_list(query_list)
+                )
+            )
+            if len(display_in_query) > 0:
+                n = display_in_query[0][1]
+                if n.isnumeric():
+                    art = Artwork.objects.order_by('?')[:int(n)]
+            else:
+                q_obj = convert_q(query_list)
+                art = Artwork.objects.filter(q_obj)
+        except pp.ParseException:
+            art = Artwork.objects.all()
+            if not re.search(r"^[A-Za-z]+:", query):
+                query_error = "ParseError: Missing a keyword"
+            else:
+                query_error = "ParseError: Incorrect query string"
+        except:
+            art = Artwork.objects.all()
+            query_error = "Incorrect query string"
+        # art = Artwork.objects.filter(
+        #     Q(title__icontains=query)
+        #     | Q(artist__icontains=query)
+        #     | Q(medium__icontains=query)
+        #     | reduce(operator.or_, (Q(title__icontains = x) for x in query.split(' ')))
+        #     | reduce(operator.or_, (Q(artist__icontains = x) for x in query.split(' ')))
+        #     | reduce(operator.or_, (Q(medium__icontains=x) for x in query.split(' ')))
+        # )
         # art = Artwork.objects.filter(
         #     complex_query(query, "title") |
         #     complex_query(query, "artist") |
@@ -166,7 +196,6 @@ def handle_render_home_page(request):
     for e in art:
         if e.artist:
             if e.artist.find("unknown") != -1:
-                # e.artist = ["Unknown artist"]
                 e.artist = "Unknown artist"
             else:
                 e.artist = ", ".join(json.loads(e.artist))
@@ -178,6 +207,7 @@ def handle_render_home_page(request):
     return render(request, 'museum_site/index.html', {
         'provided_consent': True, 'page_id': 'index',
         'page_obj': page_obj,
+        'query_error': query_error,
         'search': None if query is None or len(query) == 0 else query,
     })
 
@@ -199,3 +229,92 @@ def save_rating(request):
         return HttpResponse('ok')
     else:
         return HttpResponseBadRequest('rating not posted to backend')
+
+
+# Custom functions
+# Convert string to a complex list
+def query_parser(q_str: str):
+    token = pp.Combine((pp.Word(pp.alphas) | pp.QuotedString("\"")) + pp.WordEnd())
+    number = pp.Combine(pp.Word(pp.nums) + pp.WordEnd())
+    keyword = pp.Combine(pp.Word(pp.alphas) + pp.Literal(":"))
+    date = pp.infix_notation(number, [
+        (pp.one_of("<= >= < > = ~"), 1, pp.opAssoc.RIGHT,),
+    ])
+    token_group = pp.Group(
+        keyword[1] + pp.infix_notation(
+            token | date, [
+                ("&", 2, pp.opAssoc.LEFT,),
+                (None, 2, pp.opAssoc.LEFT,),
+            ]
+        )[1, ...]
+    )
+    sample = pp.Group(
+        pp.Literal("display:")[1] + number[1]
+    )
+    key_group = pp.infix_notation(
+        token_group, [
+            ("&", 2, pp.opAssoc.LEFT,),
+            (None, 2, pp.opAssoc.LEFT,),
+        ]
+    )
+    return (sample | pp.OneOrMore(key_group)).parse_string(q_str)
+
+
+# Convert to Q objects
+def convert_q(q: list) -> Q:
+    # Simple queries keyword: term
+    def __single_query(inner_q):
+        if inner_q is None or len(inner_q) == 0 or "&" in inner_q:
+            return Q()
+        elements = [
+            Q(**{"{}__icontains".format(e[0].strip(":")): e[1]})
+            for e in inner_q if isinstance(e[0], str) and not isinstance(e[1], list)
+        ]
+        if elements is None or len(elements) == 0:
+            return Q()
+        return reduce(operator.or_, elements, Q())
+
+    # Multiple terms in a single keyword
+    def __multi_term(inner_q):
+        if inner_q is None or len(inner_q) == 0 or "&" in inner_q:
+            return Q()
+        elements = [
+            Q(**{"{}__icontains".format(e[0].strip(":")): u})
+            for e in inner_q if isinstance(e[0], str) and isinstance(e[1], list)
+            for u in e[1]
+        ]
+        if elements is None or len(elements) == 0:
+            return Q()
+        return reduce(operator.or_, elements, Q())
+
+    # multi_key
+    def __multi_key(inner_q):
+        if "&" in inner_q:
+            elements = [__single_query([e]) | __multi_term([e])
+                        for e in inner_q if isinstance(e, list)]
+        else:
+            elements = [
+                __single_query([u]) | __multi_term([u])
+                for e in inner_q if isinstance(e, list) and "&" in e
+                for u in e if isinstance(u, list)
+            ]
+        if elements is None or len(elements) == 0:
+            return Q()
+        return reduce(operator.and_, elements, Q())
+
+    # Remove redundant lists
+    while len(q) == 1:
+        q = q[0]
+    if isinstance(q[0], str):
+        q = [q]
+
+    # Convert to Q()
+    return __single_query(q) | __multi_term(q) | __multi_key(q)
+
+
+def squeeze_list(l_obj):
+    while len(l_obj) == 1:
+        l_obj = l_obj[0]
+    if isinstance(l_obj[0], str):
+        l_obj = [l_obj]
+    return l_obj
