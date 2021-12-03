@@ -126,12 +126,16 @@ def artwork(request, artwork_id):
         artists = ["{0} ({1} - {2})".format(n[1], db[1], dd[1])
                    for n, db, dd in zip(*[art.artist, art.birth_date, art.death_date])]
 
-    # record that the user has seen this artwork
-    ArtworkVisited.objects.create(
-        user=User.objects.get(user_id=request.session['user_id']),
-        art=art,
-        timestamp=timezone.now()
-    )
+    # 'refresh' controls whether current Artwork is loaded from index or refreshed
+    if not request.session['refresh']:
+        # Controls if Refresh button is used
+        request.session['refresh'] = True
+
+        ArtworkVisited.objects.create(
+            user=User.objects.get(user_id=request.session['user_id']),
+            art=art,
+            timestamp=timezone.now()
+        )
 
     return render(request, "museum_site/artwork.html", {
         'provided_consent': True, 'page_id': 'art_' + artwork_id,
@@ -174,6 +178,9 @@ def handle_render_home_page(request):
     paginator = Paginator(art, 15)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
+    # When user is back at index, this indicates session at Artwork is closed
+    request.session['refresh'] = False
 
     return render(request, 'museum_site/index.html', {
         'provided_consent': True, 'page_id': 'index',

@@ -1,9 +1,24 @@
-<form style="text-align: center; top: 0; padding: 0 10% 0 10%"  method="get">
-    <input class="form-control mr-sm-2" style="display: inline-block; width: 80%;" type="search" placeholder="Search gallery" aria-label="Search" name="search">
-    <button class="btn btn-outline-secondary my-2 my-sm-0" style="display: inline-block; color: var(--search-btn-foreground); background-color: var(--search-btn-background)"
+<form style="text-align: center; top: 0; padding: 0 10% 0 10%"  method="get", id="searchbar">
+    <input class="form-control mr-sm-2" style="display: inline-block; width: 80%;"
+            type="search"
+            placeholder="Search gallery"
+            aria-label="Search"
+            name="search"
+            value={% if search %} "{{ search }}" {% else %} "" {% endif %}>
+    <button class="btn btn-outline-secondary my-2 my-sm-0"
+            style="display: inline-block; color: var(--search-btn-foreground); background-color: var(--search-btn-background)"
             type="submit"
             onclick = "return interaction_event('search', '', '{{ page_id }}', '{{ csrf_token }}');">Search</button>
-    <button class="btn btn-outline-secondary my-2 my-sm-0" style="display: inline-block; color: var(--search-btn-foreground); background-color: var(--search-btn-background); margin-left: 5px;"
-            type="submit"
-            onclick = "return interaction_event('clear', '', '{{ page_id }}', '{{ csrf_token }}');">Clear</button>
+    <button class="btn btn-outline-secondary my-2 my-sm-0" style="display: inline-block; color: var(--search-btn-foreground); background-color: var(--search-btn-background); margin-left: 5px;">
+        <a
+                href="{% url 'museum_site:index' %}"
+                onclick = "return interaction_event('click', 'clear', '{{ page_id }}', '{{ csrf_token }}');"
+                style="text-decoration: none; color: white;"
+        >
+            Clear
+        </a>
+    </button>
 </form>
+<!--
+"Search gallery, e.g. artist: <artists' names> title: <any title or its part> medium: <e.g. oil metal wood >"
+-->
