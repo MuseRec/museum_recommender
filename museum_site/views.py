@@ -96,11 +96,12 @@ def artwork(request, artwork_id):
     art = Artwork.objects.get(art_id=artwork_id)
 
     # if the user has previously visited the artwork, then get the rating
+    artwork_rating = None
     av = ArtworkVisited.objects.filter(user=request.session['user_id'], art=artwork_id)
     if av:
-        artwork_rating = av.latest('timestamp').rating
-    else:
-        artwork_rating = None
+        artwork_rating = str(av.latest('timestamp').rating)
+        if artwork_rating != "None" and len(artwork_rating) > 0 and artwork_rating.isnumeric():
+            artwork_rating = int(artwork_rating)
 
     # Convert JSON types to lists
     if art.artist:
@@ -141,7 +142,7 @@ def artwork(request, artwork_id):
         'provided_consent': True, 'page_id': 'art_' + artwork_id,
         'artwork': art,
         'artists': artists,
-        'artwork_rating': str(artwork_rating),
+        'artwork_rating': artwork_rating,
     })
 
 

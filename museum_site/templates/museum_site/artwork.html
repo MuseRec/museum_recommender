@@ -131,7 +131,7 @@
                     {% for rating_value in rating_list.split %}
                         <input
                                 type="radio" name="rating" id="{{ rating_value }}" value="{{ rating_value }}"
-                                onclick="return rating_event(
+                                onclick="return handle_rating(
                                         '{{ artwork.art_id }}',
                                         '{{ rating_value }}',
                                         '{{ csrf_token }}'
@@ -154,4 +154,34 @@
         {% endif %}
     {% endcomment %}
     </div>
+
+    <script type="text/javascript">
+        function radio_button(tag_id, state) {
+            let rb = document.getElementById(tag_id);
+            if ((rb !== null) && (rb !== undefined)) {
+                rb.checked = state;
+            }
+        }
+
+        function set_rating(val) {
+            for (let i = 1; i <= val; i++) {
+                radio_button(i.toString(), true);
+            }
+            for (let i = val + 1; i <= 5; i++) {
+                radio_button(i.toString(), false);
+            }
+        }
+
+        function handle_rating(art_id, val, csrf_token) {
+            set_rating(parseInt(val));
+            return rating_event(art_id, val, csrf_token);
+        }
+    </script>
+
+    {% if artwork_rating %}
+    <script type="text/javascript">
+        set_rating(parseInt({{ artwork_rating }}));
+    </script>
+    {% endif %}
+
 {% endblock content %}
