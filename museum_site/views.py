@@ -97,7 +97,10 @@ def artwork(request, artwork_id):
 
     # if the user has previously visited the artwork, then get the rating
     artwork_rating = None
-    av = ArtworkVisited.objects.filter(user=request.session['user_id'], art=artwork_id)
+    av = ArtworkVisited.objects.filter(
+        user=request.session['user_id'],
+        art=artwork_id,
+    ).exclude(rating__isnull=True)
     if av:
         artwork_rating = str(av.latest('timestamp').rating)
         if artwork_rating != "None" and len(artwork_rating) > 0 and artwork_rating.isnumeric():
