@@ -93,18 +93,20 @@ def handle_demographic_post(request):
 
 
 def artwork(request, artwork_id):
-    art = Artwork.objects.get(art_id=artwork_id)
+    def is_rating_valid(ar):
+        return ar != "None" and len(ar) > 0 and ar.isnumeric()
 
-    # if the user has previously visited the artwork, then get the rating
-    artwork_rating = None
-    av = ArtworkVisited.objects.filter(
-        user=request.session['user_id'],
-        art=artwork_id,
-    ).exclude(rating__isnull=True)
-    if av:
-        artwork_rating = str(av.latest('timestamp').rating)
-        if artwork_rating != "None" and len(artwork_rating) > 0 and artwork_rating.isnumeric():
-            artwork_rating = int(artwork_rating)
+    def create_artwork(predicate=None):
+        print(predicate)
+        predicate = True if predicate is None else predicate
+        if predicate:
+            ArtworkVisited.objects.create(
+                user=User.objects.get(user_id=request.session['user_id']),
+                art=art,
+                timestamp=timezone.now()
+            )
+
+    art = Artwork.objects.get(art_id=artwork_id)
 
     # Convert JSON types to lists
     if art.artist:
@@ -130,23 +132,43 @@ def artwork(request, artwork_id):
         artists = ["{0} ({1} - {2})".format(n[1], db[1], dd[1])
                    for n, db, dd in zip(*[art.artist, art.birth_date, art.death_date])]
 
-    # 'refresh' controls whether current Artwork is loaded from index or refreshed
-    if not request.session['refresh']:
-        # Controls if Refresh button is used
-        request.session['refresh'] = True
-
-        ArtworkVisited.objects.create(
-            user=User.objects.get(user_id=request.session['user_id']),
-            art=art,
-            timestamp=timezone.now()
-        )
-
-    return render(request, "museum_site/artwork.html", {
-        'provided_consent': True, 'page_id': 'art_' + artwork_id,
+    data = {
+        'provided_consent': True,
+        'page_id': 'art_' + artwork_id,
         'artwork': art,
         'artists': artists,
-        'artwork_rating': artwork_rating,
-    })
+        'artwork_rating': None,
+    }
+
+    av = ArtworkVisited.objects.filter(user=request.session['user_id'], art=artwork_id)
+
+    if not av:
+        # They visit this artwork for the first time
+        create_artwork()
+        request.session["refresh"] = True
+        return render(request, "museum_site/artwork.html", data)
+
+    artwork_rating = str(av.latest('timestamp').rating)
+    if is_rating_valid(artwork_rating):
+        # They revisit the artwork with the valid rating.
+        print(request.session["refresh"])
+        create_artwork(not request.session["refresh"])
+        request.session["refresh"] = True
+        data["artwork_rating"] = int(artwork_rating)
+    else:
+        # If the last rating is invalid/null, they already revisited the artwork,
+        # without reviewing. The new record is not created but the last valid rating
+        # can still be displayed if it exists.
+        av_recent = ArtworkVisited.objects.filter(
+            user=request.session['user_id'],
+            art=artwork_id
+        ).exclude(rating__isnull=True)
+        if av_recent:
+            artwork_rating = str(av_recent.latest('timestamp').rating)
+            if is_rating_valid(artwork_rating):
+                data["artwork_rating"] = int(artwork_rating)
+
+    return render(request, "museum_site/artwork.html", data)
 
 
 def handle_render_home_page(request):
