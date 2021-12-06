@@ -97,7 +97,6 @@ def artwork(request, artwork_id):
         return ar != "None" and len(ar) > 0 and ar.isnumeric()
 
     def create_artwork(predicate=None):
-        print(predicate)
         predicate = True if predicate is None else predicate
         if predicate:
             ArtworkVisited.objects.create(
@@ -151,8 +150,7 @@ def artwork(request, artwork_id):
     artwork_rating = str(av.latest('timestamp').rating)
     if is_rating_valid(artwork_rating):
         # They revisit the artwork with the valid rating.
-        print(request.session["refresh"])
-        create_artwork(not request.session["refresh"])
+        create_artwork(not request.session.get("refresh"))
         request.session["refresh"] = True
         data["artwork_rating"] = int(artwork_rating)
     else:

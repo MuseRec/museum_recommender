@@ -259,7 +259,7 @@ class ArtworkTest(TestCase):
         # visit the artwork and check that the rating is in the response
         response = self.client.get(reverse('museum_site:artwork', args=[self.artwork.art_id]))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['artwork_rating'], '5')
+        self.assertEqual(response.context['artwork_rating'], 5)
 
 
 class SaveRatingTest(TestCase):
@@ -303,33 +303,59 @@ class SaveRatingTest(TestCase):
         self.assertEqual(av.rating, 5)
 
     def test_that_most_recent_object_is_updated(self):
+        s = self.client.session
+
         # add a visit where the user rates the artwork
         _ = self.client.get(reverse('museum_site:artwork', args=[self.artwork.art_id]))
         response = self.client.post(
             reverse('museum_site:rating'),
             data={'artwork_id': self.artwork.art_id, 'rating_number': 1})
         self.assertEqual(response.status_code, 200)
-
-        # add another couple of visits
+        # update the same record - user refreshes the current page
         _ = self.client.get(reverse('museum_site:artwork', args=[self.artwork.art_id]))
         _ = self.client.get(reverse('museum_site:artwork', args=[self.artwork.art_id]))
 
         # visit again, store a new rating
-        visit_respose = self.client.get(reverse('museum_site:artwork', args=[self.artwork.art_id]))
+        visit_response = self.client.get(reverse('museum_site:artwork', args=[self.artwork.art_id]))
         rating_response = self.client.post(
             reverse('museum_site:rating'),
             data={'artwork_id': self.artwork.art_id, 'rating_number': 4}
         )
-        self.assertEqual(visit_respose.status_code, 200)
+        self.assertEqual(visit_response.status_code, 200)
         self.assertEqual(rating_response.status_code, 200)
-
         # check that the most recent object is updated
         self.assertEqual(
             ArtworkVisited.objects.filter(
                 user=self.user, art=self.artwork).latest('timestamp').rating, 4
         )
 
-        # check that the other objects haven't been updated
+        # New session is created when User follows links from the main page
+        s.update({ "refresh": False, })
+        s.save()
+        _ = self.client.get(reverse('museum_site:artwork', args=[self.artwork.art_id]))
+        # Another visit creates a new rating
+        self.assertEqual(
+            ArtworkVisited.objects.filter(
+                user=self.user, art=self.artwork).latest('timestamp').rating, None
+        )
+        _ = self.client.post(
+            reverse('museum_site:rating'),
+            data={'artwork_id': self.artwork.art_id, 'rating_number': 3}
+        )
+        # Rating is updated
+        self.assertEqual(
+            ArtworkVisited.objects.filter(
+                user=self.user, art=self.artwork).latest('timestamp').rating, 3
+        )
+
+        # Test of the old way
+        # # check that the other objects haven't been updated
+        # av_set = ArtworkVisited.objects.all().order_by('timestamp')
+        # for av, rating in zip(av_set, [None, 1, None, None, 4]):  # first none due to setUp
+        #     self.assertEqual(av.rating, rating)
+
+        # users revisit the same artwork again
         av_set = ArtworkVisited.objects.all().order_by('timestamp')
-        for av, rating in zip(av_set, [None, 1, None, None, 4]):  # first none due to setUp
+
+        for av, rating in zip(av_set, [1, 4, 3]):
             self.assertEqual(av.rating, rating)
