@@ -30,6 +30,8 @@ DEBUG = os.getenv('DEBUG')
 
 ALLOWED_HOSTS = []
 
+STUDY_CONTEXT = os.environ.get('CONTEXT', default = 'focus')
+
 
 # Application definition
 

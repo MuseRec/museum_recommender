@@ -123,23 +123,35 @@
                 </div>
             {% endif %}
 
-            <hr class="full-separator"/>
+            
+            
+            {% if study_context == 'focus' %}
+                <hr class="full-separator"/>
 
-            <h5>Rate me:</h5>
-            <div class="rating">
-                {% with rating_list='5 4 3 2 1' %}
-                    {% for rating_value in rating_list.split %}
-                        <input
-                                type="radio" name="rating" id="{{ rating_value }}" value="{{ rating_value }}"
-                                onclick="return rating_event(
-                                        '{{ artwork.art_id }}',
-                                        '{{ rating_value }}',
-                                        '{{ csrf_token }}'
-                                        );">
-                        <label for='{{ rating_value }}'>☆</label>
-                    {% endfor %}
-                {% endwith %}
-            </div>
+                <h5>Rate me:</h5>
+                <div class="rating">
+                    {% with rating_list='5 4 3 2 1' %}
+                        {% for rating_value in rating_list.split %}
+                            <input
+                                    type="radio" name="rating" id="{{ rating_value }}" value="{{ rating_value }}"
+                                    onclick="return rating_event(
+                                            '{{ artwork.art_id }}',
+                                            '{{ rating_value }}',
+                                            '{{ csrf_token }}'
+                                            );">
+                            <label for='{{ rating_value }}'>☆</label>
+                        {% endfor %}
+                    {% endwith %}
+                </div>
+            {% endif %}
+
+            {% if study_context == 'focus' %}
+                <hr class="full-separator"/>
+
+                <h5>Similar artworks:</h5>
+                <p>{{ study_context }}</p>
+            {% endif %}
+
         </div>
     </div>
 

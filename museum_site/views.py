@@ -6,6 +6,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views import View
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.conf import settings
 
 import uuid
 import operator
@@ -17,7 +18,7 @@ from .models import User, UserDemographic, Artwork, ArtworkVisited
 
 
 def index(request):
-    if request.method == 'POST':
+    if (request.method == 'POST') and (settings.CONTEXT == 'user'):
         if 'information_sheet_form' in request.POST:
             return handle_information_sheet_post(request)
         elif 'demographic_form' in request.POST:
@@ -38,6 +39,7 @@ def index(request):
         consent_form = UserForm()
         return render(request, "museum_site/index.html", {
             'provided_consent': False, 'consent_form': consent_form,
+            'study_context': settings.CONTEXT
         })
 
 
@@ -133,11 +135,16 @@ def artwork(request, artwork_id):
         timestamp=timezone.now()
     )
 
+    # fetch the top 5 most similar artworks to this one, if the context is the focus group
+    if settings.STUDY_CONTEXT == 'focus':
+        pass
+
     return render(request, "museum_site/artwork.html", {
         'provided_consent': True, 'page_id': 'art_' + artwork_id,
         'artwork': art,
         'artists': artists,
         'artwork_rating': str(artwork_rating),
+        'study_context': settings.STUDY_CONTEXT
     })
 
 
@@ -163,15 +170,30 @@ def handle_render_home_page(request):
         art = Artwork.objects.all()
 
     # Convert ot list
-    for e in art:
-        if e.artist:
-            if e.artist.find("unknown") != -1:
-                # e.artist = ["Unknown artist"]
-                e.artist = "Unknown artist"
-            else:
-                e.artist = ", ".join(json.loads(e.artist))
+    # for e in art:
+    #     if e.artist:
+    #         if e.artist.find("unknown") != -1:
+    #             # e.artist = ["Unknown artist"]
+    #             e.artist = "Unknown artist"
+    #         else:
+    #             e.artist = ", ".join(json.loads(e.artist))
 
-    paginator = Paginator(art, 15)
+    # convert the artist list
+    for artwork in art:
+        if artwork.artist:
+            try: 
+                artist_list = json.loads(artwork.artist)
+            except json.decoder.JSONDecodeError:
+                artist_list = artwork.artist.split(',')[0]
+            
+            if len(artist_list) > 1:
+                artwork.artist = ', '.join(artist_list)
+            else:
+                artwork.artist = artist_list[0]
+        else:
+            artwork.artist = 'unknown artist'
+    
+    paginator = Paginator(art, 30)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -179,6 +201,7 @@ def handle_render_home_page(request):
         'provided_consent': True, 'page_id': 'index',
         'page_obj': page_obj,
         'search': None if query is None or len(query) == 0 else query,
+        'study_context': settings.STUDY_CONTEXT
     })
 
 
