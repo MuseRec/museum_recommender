@@ -32,12 +32,18 @@ ALLOWED_HOSTS = []
 
 STUDY_CONTEXT = os.environ.get('CONTEXT', default = 'focus')
 
+import faiss as f_ai  
+
+if STUDY_CONTEXT == 'focus':
+    RECOMMENDATION_MODEL = f_ai.read_index('models/faiss_concatenated')
+
 
 # Application definition
 
 INSTALLED_APPS = [
     'museum_site.apps.MuseumSiteConfig',
     'collector.apps.CollectorConfig',
+    'recommendations.apps.RecommendationsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
