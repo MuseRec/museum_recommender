@@ -15,7 +15,7 @@ from functools import reduce
 
 from .forms import UserForm, UserDemographicForm
 from .models import User, UserDemographic, Artwork, ArtworkVisited
-
+from recommendations.models import Similarities, DataRepresentation
 
 def index(request):
     if (request.method == 'POST') and (settings.CONTEXT == 'user'):
@@ -135,17 +135,26 @@ def artwork(request, artwork_id):
         timestamp=timezone.now()
     )
 
-    # fetch the top 5 most similar artworks to this one, if the context is the focus group
-    if settings.STUDY_CONTEXT == 'focus':
-        pass
-
-    return render(request, "museum_site/artwork.html", {
+    context = {
         'provided_consent': True, 'page_id': 'art_' + artwork_id,
         'artwork': art,
         'artists': artists,
         'artwork_rating': str(artwork_rating),
-        'study_context': settings.STUDY_CONTEXT
-    })
+        'study_context': settings.STUDY_CONTEXT,
+    }
+
+    # fetch the top 5 most similar artworks to this one, if the context is the focus group
+    if settings.STUDY_CONTEXT == 'focus':
+        print(artwork)
+        result_set = Similarities.objects.filter(
+            art = art, 
+            representation = DataRepresentation.objects.get(source = settings.DATA_REP_TYPE)
+        )[:5]
+        context['similar_artworks'] = result_set
+        print(result_set)
+        print(len(result_set))
+
+    return render(request, "museum_site/artwork.html", context)
 
 
 def handle_render_home_page(request):

@@ -18,7 +18,7 @@ from recommendations.models import Similarities, DataRepresentation
 from django.core.exceptions import ObjectDoesNotExist
 
 def write_data_representations():
-    for rep in ['meta', 'image', 'concat']:
+    for rep in ['meta', 'image', 'concatenated']:
         dp = DataRepresentation(source = rep)
         dp.save()
 
@@ -33,13 +33,13 @@ def determine_missing_image(img, sim_img):
     except ObjectDoesNotExist:
         return (sim_img, 'sim_img')
 
-def write_to_similarities_db(file_name):
+def write_to_similarities_db(file_name, concat = True):
     data = pd.read_csv('models/' + file_name).to_dict(orient = 'records')
-    
+
     missing_images = []
     bulk = []
     for idx, datum in enumerate(data):
-        try: 
+        try:
             sim = Similarities(
                 art = Artwork.objects.get(art_id = datum['img']),
                 similar_art = Artwork.objects.get(art_id = datum['sim_img']),
@@ -63,7 +63,7 @@ def write_to_similarities_db(file_name):
 
 def main():
     # write the representations to the database
-    # write_data_representations()
+    write_data_representations()
 
     """
         There is an issue with missing ID's in the database and it's not clear
@@ -76,14 +76,14 @@ def main():
         'concatenated_similarities.csv'
     ]
 
-    # missing_images = []
-    # for f_name in csv_files[:1]:
-    #     print(f"Parsing {f_name}...")
-    #     missing = write_to_similarities_db(f_name)
-    #     missing_images += missing
+    missing_images = []
+    for f_name in csv_files:
+        print(f"Parsing {f_name}...")
+        missing = write_to_similarities_db(f_name)
+        missing_images += missing
 
-    
-    # print(len(set(missing_images)))
+    missing_images = set(missing_images)
+    print(len(missing_images))
 
     # print(f"Total number missing: {len(missing_images)}")
     # with open('models/missing_images.json', 'w') as f:

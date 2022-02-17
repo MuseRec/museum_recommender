@@ -32,6 +32,9 @@ ALLOWED_HOSTS = []
 
 STUDY_CONTEXT = os.environ.get('CONTEXT', default = 'focus')
 
+if STUDY_CONTEXT == 'focus':
+    DATA_REP_TYPE = 'concatenated'
+
 # Application definition
 
 INSTALLED_APPS = [

@@ -149,7 +149,15 @@
                 <hr class="full-separator"/>
 
                 <h5>Similar artworks:</h5>
-                <p>{{ study_context }}</p>
+                <div class = 'row'>
+                    {% for art in similar_artworks %}
+                        <div class = 'card' id = 'similar-art-card'>
+                            <a href = "{% url 'museum_site:artwork' art.art_id %}">
+                                <img class = 'card-img-top' src = "{% static 'img/images' %}{{ art.img_file }}" alt = '{{ art.title|cut:"" }}' />
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
             {% endif %}
 
         </div>
