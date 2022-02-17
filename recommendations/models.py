@@ -4,7 +4,7 @@ from museum_site.models import Artwork
 # Create your models here.
 
 class DataRepresentation(models.Model):
-    source = models.CharField(max_length = 6)
+    source = models.CharField(max_length = 12)
 
     def __str__(self) -> str:
         return self.source

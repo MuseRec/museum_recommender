@@ -145,14 +145,11 @@ def artwork(request, artwork_id):
 
     # fetch the top 5 most similar artworks to this one, if the context is the focus group
     if settings.STUDY_CONTEXT == 'focus':
-        print(artwork)
         result_set = Similarities.objects.filter(
             art = art, 
             representation = DataRepresentation.objects.get(source = settings.DATA_REP_TYPE)
         )[:5]
         context['similar_artworks'] = result_set
-        print(result_set)
-        print(len(result_set))
 
     return render(request, "museum_site/artwork.html", context)
 

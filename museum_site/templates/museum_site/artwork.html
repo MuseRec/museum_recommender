@@ -151,10 +151,13 @@
                 <h5>Similar artworks:</h5>
                 <div class = 'row'>
                     {% for art in similar_artworks %}
-                        <div class = 'card' id = 'similar-art-card'>
-                            <a href = "{% url 'museum_site:artwork' art.art_id %}">
-                                <img class = 'card-img-top' src = "{% static 'img/images' %}{{ art.img_file }}" alt = '{{ art.title|cut:"" }}' />
-                            </a>
+                        <div class = 'col-sm-2'>
+                            {% comment %} <div class = 'card' id = 'similar-art-card' style = "background-color: white;"> {% endcomment %}
+                                <a href = "{% url 'museum_site:artwork' art.similar_art.art_id %}">
+                                    <img class = 'card-img-top' 
+                                        src = "{% static 'img/images/' %}{{ art.similar_art.img_file }}" alt = '{{ art.simiar_art.title|cut:"" }}' />
+                                </a>
+                            {% comment %} </div> {% endcomment %}
                         </div>
                     {% endfor %}
                 </div>

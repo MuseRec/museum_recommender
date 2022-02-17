@@ -53,7 +53,7 @@ def write_to_similarities_db(file_name, concat = True):
 
         if idx % 25000 == 0 and idx != 0:
             # save in a batch and reset the list
-            # Similarities.objects.bulk_create(bulk)
+            Similarities.objects.bulk_create(bulk)
             bulk = []
 
             print(f"{idx} similarities saved")
@@ -63,7 +63,8 @@ def write_to_similarities_db(file_name, concat = True):
 
 def main():
     # write the representations to the database
-    write_data_representations()
+    # write_data_representations()
+    # print('data representations written to db')
 
     """
         There is an issue with missing ID's in the database and it's not clear
@@ -77,7 +78,7 @@ def main():
     ]
 
     missing_images = []
-    for f_name in csv_files:
+    for f_name in [csv_files[-1]]:
         print(f"Parsing {f_name}...")
         missing = write_to_similarities_db(f_name)
         missing_images += missing
