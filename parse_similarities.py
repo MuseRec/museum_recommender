@@ -63,8 +63,8 @@ def write_to_similarities_db(file_name, concat = True):
 
 def main():
     # write the representations to the database
-    # write_data_representations()
-    # print('data representations written to db')
+    write_data_representations()
+    print('data representations written to db')
 
     """
         There is an issue with missing ID's in the database and it's not clear
