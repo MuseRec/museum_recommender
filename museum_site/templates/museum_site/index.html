@@ -5,9 +5,11 @@
 {% block content %}
     {% load static %}
 
-    {% include 'museum_site/information_sheet.html' %}
+    {% if study_context == "user" %}
+        {% include 'museum_site/information_sheet.html' %}
 
-    {% include 'museum_site/demographic_form.html' %}
+        {% include 'museum_site/demographic_form.html' %}
+    {% endif %}
 
     <div class="search-bar" style="position: relative; top: -3px;">
         {% include 'museum_site/searchbar.html' %}
@@ -25,7 +27,7 @@
                                 <div class='artwork-img-style'>
                                     <a href = "{% url 'museum_site:artwork' art.art_id %}"
                                         onclick = "return interaction_event('click', '{{ art.art_id }}', '{{ page_id }}', '{{ csrf_token }}');">
-                                        <img class = 'card-img-top' style="width: 150px; height: 180px; background-size: 300% 300%;" src = "{% static 'img/images/' %}{{ art.img_file }}"
+                                        <img class = 'card-img-top' style="width: 150px; height: 180px; background-size: 300% 300%;" src = "{% static 'img/images' %}{{ art.img_file }}"
                                             alt = '{{ art.title|cut:"'" }}' />
                                     </a>
                                 </div>

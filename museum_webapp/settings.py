@@ -30,12 +30,17 @@ DEBUG = os.getenv('DEBUG')
 
 ALLOWED_HOSTS = []
 
+STUDY_CONTEXT = os.environ.get('CONTEXT', default = 'focus')
+
+if STUDY_CONTEXT == 'focus':
+    DATA_REP_TYPE = 'concatenated'
 
 # Application definition
 
 INSTALLED_APPS = [
     'museum_site.apps.MuseumSiteConfig',
     'collector.apps.CollectorConfig',
+    'recommendations.apps.RecommendationsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

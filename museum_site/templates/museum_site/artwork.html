@@ -123,23 +123,46 @@
                 </div>
             {% endif %}
 
-            <hr class="full-separator"/>
+            
+            
+            {% if study_context == 'focus' %}
+                <hr class="full-separator"/>
 
-            <h5>Rate me:</h5>
-            <div class="rating">
-                {% with rating_list='5 4 3 2 1' %}
-                    {% for rating_value in rating_list.split %}
-                        <input
-                                type="radio" name="rating" id="{{ rating_value }}" value="{{ rating_value }}"
-                                onclick="return rating_event(
-                                        '{{ artwork.art_id }}',
-                                        '{{ rating_value }}',
-                                        '{{ csrf_token }}'
-                                        );">
-                        <label for='{{ rating_value }}'>☆</label>
+                <h5>Rate me:</h5>
+                <div class="rating">
+                    {% with rating_list='5 4 3 2 1' %}
+                        {% for rating_value in rating_list.split %}
+                            <input
+                                    type="radio" name="rating" id="{{ rating_value }}" value="{{ rating_value }}"
+                                    onclick="return rating_event(
+                                            '{{ artwork.art_id }}',
+                                            '{{ rating_value }}',
+                                            '{{ csrf_token }}'
+                                            );">
+                            <label for='{{ rating_value }}'>☆</label>
+                        {% endfor %}
+                    {% endwith %}
+                </div>
+            {% endif %}
+
+            {% if study_context == 'focus' %}
+                <hr class="full-separator"/>
+
+                <h5>Similar artworks:</h5>
+                <div class = 'row'>
+                    {% for art in similar_artworks %}
+                        <div class = 'col-sm-2'>
+                            {% comment %} <div class = 'card' id = 'similar-art-card' style = "background-color: white;"> {% endcomment %}
+                                <a href = "{% url 'museum_site:artwork' art.similar_art.art_id %}">
+                                    <img class = 'card-img-top' 
+                                        src = "{% static 'img/images/' %}{{ art.similar_art.img_file }}" alt = '{{ art.simiar_art.title|cut:"" }}' />
+                                </a>
+                            {% comment %} </div> {% endcomment %}
+                        </div>
                     {% endfor %}
-                {% endwith %}
-            </div>
+                </div>
+            {% endif %}
+
         </div>
     </div>
 

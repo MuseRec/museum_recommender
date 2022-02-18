@@ -60,7 +60,9 @@ def artuk_metadata(file):
         artwork.save()
 
         if (idx + 1) % 1000 == 0 or idx >= end:
-            print(f"{idx + 1} artworks saved.")
+            # print(f"{idx + 1} artworks saved.")
+            print('{} artworks saved.'.format(idx + 1))
+
     return list_meta
 
 
