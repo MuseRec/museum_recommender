@@ -1,8 +1,9 @@
 .vscode/ 
 .env
 
+artwork_metadata/*
+
 *.json 
-*.csv
 *.pickle 
 *.p
 *.jpg
