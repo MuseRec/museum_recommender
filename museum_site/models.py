@@ -21,6 +21,46 @@ WORK_CHOICES = [
     ('retired', 'Retired'), ('unemployed', 'Unemployed')
 ]
 
+# 'OTHER' IS OPEN ENDED
+# ETHNIC_GROUP = [
+#     ('white', 'White'), ('mixed', 'Mixed/Multiple Ethnic Groups'), ('asian', 'Asian'),
+#     ('black', 'Black/African/Carribean'), ('no answer', 'Prefer not to say')
+# ]
+
+DISABILITY = [
+    ('disable', 'Identify as disabled'), ('not disabled', 'Do not identify as disable'),
+    ('no answer', 'Prefer not to answer')
+]
+
+# --- Domain Knowledge Choices ---
+ART_KNOWLEDGE = [
+    ('novice', 'Novice'), ('some', 'I have got some knowledge'), ('knowledgeable', 'knowledgeable'),
+    ('expert', 'Expert')
+]
+
+MUSEUM_VISITS = [
+    ('most days', 'Most Days'), ('once a week', 'At least once a week'), 
+    ('once a month', 'At least once a month'), 
+    ('every two to three months', 'At least once every two to three months'),
+    ('once a year', 'At least once a year'), ('first time', 'This is my first time')
+]
+
+VIEW_COLLECTIONS = [
+    ('most days', 'Most Days'), ('once a week', 'At least once a week'), 
+    ('once a month', 'At least once a month'), 
+    ('every two to three months', 'At least once every two to three months'),
+    ('once a year', 'At least once a year'), ('first time', 'This is my first time')
+]
+
+PHYSICAL_VISITS = [
+    ('once every 6 months', 'At least once every 6 months'),
+    ('once a year', 'At least once a year'),
+    ('two or three years', 'Every two or three years'),
+    ('four or five years', 'Every four or five years'),
+    ('six years or longer', 'I have not been to a museum/art gallery in 6 years or longer'),
+    ('never', 'I have never visited a museum/art gallery in person')
+]
+
 
 class User(models.Model):
     """
@@ -102,3 +142,19 @@ class ArtworkVisited(models.Model):
 
     def __str__(self):
         return f"User: {self.user.user_id}; Art: {self.art.art_id}; Timestamp: {self.timestamp}"
+
+
+class DomainKnowledge(models.Model):
+    """
+        A model to represent the domain knowledge questionnaire.
+    """
+    user = models.OneToOneField(User, on_delete = models.CASCADE, primary_key = True)
+    art_knowledge = models.CharField(max_length = 20, choices = ART_KNOWLEDGE)
+    museum_visits = models.CharField(max_length = 30, choices = MUSEUM_VISITS)
+    view_collections = models.CharField(max_length = 30, choices = VIEW_COLLECTIONS)
+    physical_visits = models.CharField(max_length = 30, choices = PHYSICAL_VISITS)
+    submission_timestamp = models.DateTimeField()
+
+    def __str__(self) -> str:
+        return f"{self.user}: [{self.art_knowledge}, {self.museum_visits}, {self.view_collections}" + \
+            f"{self.physical_visits}]"

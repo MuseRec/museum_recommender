@@ -30,9 +30,9 @@ DEBUG = os.getenv('DEBUG')
 
 ALLOWED_HOSTS = []
 
-STUDY_CONTEXT = os.environ.get('CONTEXT', default = 'focus')
+CONTEXT = os.environ.get('CONTEXT', default = 'focus')
 
-if STUDY_CONTEXT == 'focus':
+if CONTEXT == 'focus':
     DATA_REP_TYPE = 'concatenated'
 
 # Application definition

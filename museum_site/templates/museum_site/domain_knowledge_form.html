@@ -1,0 +1,31 @@
+{% load crispy_forms_tags %}
+
+{% if provided_consent and provided_demographics and load_domain %}
+    <div class="modal fade" id="domain_form_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="domain_form_modal_title">Domain Knowledge</h5>
+                </div>
+                <div class="modal-body">
+                    <form method = "post">
+                        {% csrf_token %}
+                        {{ domain_form|crispy }}
+                        <input type = "submit" value = "Submit" class = "btn btn-primary" name = "domain_form">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>    
+{% endif %}
+
+{% if provided_consent and provided_demographics and load_domain %}
+    <script type = "text/javascript">
+        $(window).on('load', function() {
+            $('#domain_form_modal').modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+        });
+    </script>
+{% endif %}

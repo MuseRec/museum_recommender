@@ -1,7 +1,7 @@
 from django.forms import ModelForm, HiddenInput
 from django.core.validators import EMPTY_VALUES
 
-from .models import User, UserDemographic
+from .models import User, UserDemographic, DomainKnowledge
 
 class UserForm(ModelForm):
     def __init__(self, *args, **kwargs):
@@ -43,4 +43,21 @@ class UserDemographicForm(ModelForm):
             'gender': 'What gender do you identify as?',
             'education': 'What is the highest level of education you have received?',
             'work': 'Which of the following categories best describes your employment status?'
+        }
+
+
+class DomainKnowledgeForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(DomainKnowledgeForm, self).__init__(*args, **kwargs)
+        for key in self.fields:
+            self.fields[key].required = True
+        
+    class Meta:
+        model = DomainKnowledge
+        fields = ('art_knowledge', 'museum_visits', 'view_collections', 'physical_visits')
+        labels = {
+            'art_knowledge': 'How would you rate your knowledge of art?',
+            'museum_visits': 'How often do you visit museum/art gallery websites?',
+            'view_collections': 'How often do you specifically look at collections online?',
+            'physical_visits': 'How often do you physically visit a museum/art gallery'
         }

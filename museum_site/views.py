@@ -13,8 +13,8 @@ import operator
 import json
 from functools import reduce
 
-from .forms import UserForm, UserDemographicForm
-from .models import User, UserDemographic, Artwork, ArtworkVisited
+from .forms import UserForm, UserDemographicForm, DomainKnowledgeForm
+from .models import User, UserDemographic, Artwork, ArtworkVisited, DomainKnowledge
 from recommendations.models import Similarities, DataRepresentation
 
 def index(request):
@@ -32,8 +32,31 @@ def index(request):
                     'provided_consent': False, 'consent_form': UserForm(),
                     'consent_required_before_demographic': True
                 })
+        # elif 'domain_form' in request.POST:
+        #     if User.objects.get(user_id = request.session['user_id']).consent:
+        #         return handle_demographic_post(request)
+        #     else:
+        #         return render(request, "museum_site/index.html", {
+        #             'provided_consent': False, 'consent_form': UserForm(), 
+        #             'consent_required_before_demographic': True
+        #         })
     else:
         if 'user_id' in request.session:
+            return handle_render_home_page(request)
+        
+        # if the context is the focus group
+        if settings.CONTEXT == 'focus':
+            # and the user doesn't exist, then we need to create one.
+            if not 'user_id' in request.session:
+                User.objects.create(
+                    user_id = 'focus-group-user',
+                    consent = True, 
+                    email = 'focus@group.com',
+                    contact_outcome = True,
+                    user_created = timezone.now()
+                )
+                request.session['user_id'] = 'focus-group-user'
+
             return handle_render_home_page(request)
 
         consent_form = UserForm()
@@ -93,6 +116,30 @@ def handle_demographic_post(request):
         # })
         return handle_render_home_page(request)
 
+        # domain_form = DomainKnowledgeForm()
+
+        # return render(request, "museum_site/index.html", {
+        #     'provided_consent': True, 'provided_demographics': True, 
+        #     'domain_form': domain_form, 'load_domain': True
+        # })
+
+def handle_domain_knowledge_post(request):
+    domain_form = DomainKnowledgeForm(request.POST)
+    if domain_form.is_valid():
+        new_domain = domain_form.save(commit = False)
+        cleaned_data = new_domain.clean()
+
+        new_domain.user = User.objects.get(user_id = request.session['user_id'])
+        new_domain.art_knowledge = cleaned_data['art_knowledge']
+        new_domain.museum_visits = cleaned_data['museum_visits']
+        new_domain.view_collections = cleaned_data['view_collections']
+        new_domain.physical_visits = cleaned_data['physical_visits']
+        new_domain.submission_timestamp = timezone.now()
+
+        new_domain.save()
+
+        return handle_render_home_page(request)
+
 
 def artwork(request, artwork_id):
     art = Artwork.objects.get(art_id=artwork_id)
@@ -140,11 +187,11 @@ def artwork(request, artwork_id):
         'artwork': art,
         'artists': artists,
         'artwork_rating': str(artwork_rating),
-        'study_context': settings.STUDY_CONTEXT,
+        'study_context': settings.CONTEXT,
     }
 
     # fetch the top 5 most similar artworks to this one, if the context is the focus group
-    if settings.STUDY_CONTEXT == 'focus':
+    if settings.CONTEXT == 'focus':
         result_set = Similarities.objects.filter(
             art = art, 
             representation = DataRepresentation.objects.get(source = settings.DATA_REP_TYPE)
@@ -207,7 +254,7 @@ def handle_render_home_page(request):
         'provided_consent': True, 'page_id': 'index',
         'page_obj': page_obj,
         'search': None if query is None or len(query) == 0 else query,
-        'study_context': settings.STUDY_CONTEXT
+        'study_context': settings.CONTEXT
     })
 
 
