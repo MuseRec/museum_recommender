@@ -34,7 +34,7 @@ DISABILITY = [
 
 # --- Domain Knowledge Choices ---
 ART_KNOWLEDGE = [
-    ('novice', 'Novice'), ('some', 'I have got some knowledge'), ('knowledgeable', 'knowledgeable'),
+    ('novice', 'Novice'), ('some', 'I have got some knowledge'), ('knowledgeable', 'Knowledgeable'),
     ('expert', 'Expert')
 ]
 
@@ -102,6 +102,7 @@ class UserDemographic(models.Model):
     gender = models.CharField(max_length = 9, choices = GENDER_CHOICES)
     education = models.CharField(max_length = 16, choices = EDU_CHOICES)
     work = models.CharField(max_length = 10, choices = WORK_CHOICES)
+    disability = models.CharField(max_length = 20, choices = DISABILITY)
 
     submission_timestamp = models.DateTimeField()
 
@@ -156,5 +157,19 @@ class DomainKnowledge(models.Model):
     submission_timestamp = models.DateTimeField()
 
     def __str__(self) -> str:
-        return f"{self.user}: [{self.art_knowledge}, {self.museum_visits}, {self.view_collections}" + \
+        return f"[{self.art_knowledge}, {self.museum_visits}, {self.view_collections}" + \
             f"{self.physical_visits}]"
+
+class UserCondition(models.Model):
+    """
+    """
+    user = models.OneToOneField(User, on_delete = models.CASCADE, primary_key = True)
+
+    # the condition, either meta, image, or concatenated
+    condition = models.CharField(max_length = 20)
+
+    # the first condition they see (either random or model)
+    order = models.CharField(max_length = 6) 
+
+    def __str__(self) -> str:
+        return f"{self.user}: {self.condition}, {self.order}"

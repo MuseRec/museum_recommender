@@ -5,6 +5,8 @@ from django.utils import timezone
 
 from museum_site.models import User, UserDemographic
 from museum_site.models import Artwork, ArtworkVisited
+from museum_site.models import UserCondition
+from museum_site.views import get_condition
 from collector.views import log
 
 

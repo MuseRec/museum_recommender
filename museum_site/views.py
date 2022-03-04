@@ -1,3 +1,4 @@
+from itertools import count
 from django.http.response import HttpResponseBadRequest
 from django.shortcuts import render
 from django.http import HttpResponse
@@ -5,7 +6,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views import View
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.conf import settings
 
 import uuid
@@ -14,8 +15,9 @@ import json
 from functools import reduce
 
 from .forms import UserForm, UserDemographicForm, DomainKnowledgeForm
-from .models import User, UserDemographic, Artwork, ArtworkVisited, DomainKnowledge
+from .models import User, UserDemographic, Artwork, ArtworkVisited, DomainKnowledge, UserCondition
 from recommendations.models import Similarities, DataRepresentation
+from .util import get_condition, get_order
 
 def index(request):
     if (request.method == 'POST') and (settings.CONTEXT == 'user'):
@@ -30,16 +32,18 @@ def index(request):
                 # if they haven't, then reload the page with the consent form
                 return render(request, "museum_site/index.html", {
                     'provided_consent': False, 'consent_form': UserForm(),
-                    'consent_required_before_demographic': True
+                    'consent_required_before_demographic': True,
+                    'study_context': settings.CONTEXT
                 })
-        # elif 'domain_form' in request.POST:
-        #     if User.objects.get(user_id = request.session['user_id']).consent:
-        #         return handle_demographic_post(request)
-        #     else:
-        #         return render(request, "museum_site/index.html", {
-        #             'provided_consent': False, 'consent_form': UserForm(), 
-        #             'consent_required_before_demographic': True
-        #         })
+        elif 'domain_form' in request.POST:
+            if User.objects.get(user_id = request.session['user_id']).consent:
+                return handle_domain_knowledge_post(request)
+            else:
+                return render(request, "museum_site/index.html", {
+                    'provided_consent': False, 'consent_form': UserForm(), 
+                    'consent_required_before_demographic': True,
+                    'study_context': settings.CONTEXT
+                })
     else:
         if 'user_id' in request.session:
             return handle_render_home_page(request)
@@ -59,6 +63,7 @@ def index(request):
 
             return handle_render_home_page(request)
 
+        print('returning the user form')
         consent_form = UserForm()
         return render(request, "museum_site/index.html", {
             'provided_consent': False, 'consent_form': consent_form,
@@ -86,12 +91,21 @@ def handle_information_sheet_post(request):
         new_user.user_created = timezone.now()
         new_user.save()
 
+        # assign to a condition and order 
+        condition = get_condition()
+        order = get_order()
+        UserCondition.objects.create(
+            user = new_user, 
+            condition = condition,
+            order = order
+        )
+
         # now load the demographic survey
         demographic_form = UserDemographicForm()
 
         return render(request, "museum_site/index.html", {
             'provided_consent': True, 'demographic_form': demographic_form,
-            'load_demographic': True
+            'load_demographic': True, 'study_context': settings.CONTEXT
         })
 
 
@@ -114,26 +128,23 @@ def handle_demographic_post(request):
         # return render(request, 'museum_site/index.html', {
         #     'provided_consent': True, 'page_id': 'index'
         # })
-        return handle_render_home_page(request)
+        # return handle_render_home_page(request)
 
-        # domain_form = DomainKnowledgeForm()
+        domain_form = DomainKnowledgeForm()
 
-        # return render(request, "museum_site/index.html", {
-        #     'provided_consent': True, 'provided_demographics': True, 
-        #     'domain_form': domain_form, 'load_domain': True
-        # })
+        return render(request, "museum_site/index.html", {
+            'provided_consent': True, 'provided_demographics': True, 
+            'domain_form': domain_form, 'load_domain': True,
+            'study_context': settings.CONTEXT
+        })
 
 def handle_domain_knowledge_post(request):
     domain_form = DomainKnowledgeForm(request.POST)
     if domain_form.is_valid():
         new_domain = domain_form.save(commit = False)
-        cleaned_data = new_domain.clean()
 
+        # assign the user and submission timestamp
         new_domain.user = User.objects.get(user_id = request.session['user_id'])
-        new_domain.art_knowledge = cleaned_data['art_knowledge']
-        new_domain.museum_visits = cleaned_data['museum_visits']
-        new_domain.view_collections = cleaned_data['view_collections']
-        new_domain.physical_visits = cleaned_data['physical_visits']
         new_domain.submission_timestamp = timezone.now()
 
         new_domain.save()
@@ -202,6 +213,8 @@ def artwork(request, artwork_id):
 
 
 def handle_render_home_page(request):
+    # 
+
     # if there is a search request
     query = None
     if request.GET.get('search'):
@@ -254,7 +267,7 @@ def handle_render_home_page(request):
         'provided_consent': True, 'page_id': 'index',
         'page_obj': page_obj,
         'search': None if query is None or len(query) == 0 else query,
-        'study_context': settings.CONTEXT
+        'study_context': settings.CONTEXT,
     })
 
 

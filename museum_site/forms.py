@@ -37,12 +37,13 @@ class UserDemographicForm(ModelForm):
     
     class Meta:
         model = UserDemographic
-        fields = ('age', 'gender', 'education', 'work')
+        fields = ('age', 'gender', 'education', 'work', 'disability')
         labels = {
             'age': 'What is your age category?',
             'gender': 'What gender do you identify as?',
             'education': 'What is the highest level of education you have received?',
-            'work': 'Which of the following categories best describes your employment status?'
+            'work': 'Which of the following categories best describes your employment status?',
+            'disability': 'Have you got a disability?'
         }
 
 

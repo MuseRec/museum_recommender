@@ -30,10 +30,16 @@ DEBUG = os.getenv('DEBUG')
 
 ALLOWED_HOSTS = []
 
-CONTEXT = os.environ.get('CONTEXT', default = 'focus')
+CONTEXT = os.environ.get('CONTEXT', default = 'user')
 
 if CONTEXT == 'focus':
     DATA_REP_TYPE = 'concatenated'
+
+if CONTEXT == 'user':
+    CONDITIONS = ['meta', 'image', 'concatenated']
+    CONDITION_INDEXES = {'meta': 0, 'image': 1, 'concatenated': 2}
+    ORDER = ['random', 'model']
+    ORDER_INDEXES = {'random': 0, 'model': 1}
 
 # Application definition
 
