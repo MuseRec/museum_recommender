@@ -1,8 +1,9 @@
 {% extends "museum_site/base.html" %}
 
+{% load crispy_forms_tags %}
+
 {% block content %}
     {% load static %}
-
     <div class='row artwork-body'>
         <div class='col' style="margin-left: 0.25em;">
             <img src="{% static 'img/images/' %}{{ artwork.img_file }}" alt="{{ artwork.title }}"
@@ -71,6 +72,10 @@
 
             <hr class="full-separator"/>
 
+            {% if artwork.execution_date %}
+                <div><strong>Execution Date:</strong> {{ artwork.execution_date }}</div>
+            {% endif %}
+
             {% if artwork.classification %}
                 <div><strong>Classification:</strong> {{ artwork.classification }}</div>
             {% endif %}
@@ -122,7 +127,29 @@
                                );"></a>
                 </div>
             {% endif %}
-
+            
+            {% if study_context == 'user' %}
+                <br />
+                <input 
+                    type="submit" value="Pick this image" class="btn btn-success" name="include_artwork"
+                    onclick = "return save_selected_artwork(
+                        '{{ artwork.art_id }}', 
+                        '{{ selection_context }}',
+                        'select', 
+                        '{{ csrf_token }}'
+                    );"
+                    id="selected-btn"
+                />
+                <input 
+                    type="submit" value="Unpick this image" class="btn btn-danger" name="uninclude_artwork"
+                    onclick = "return save_selected_artwork(
+                        '{{ artwork.art_id }}', 
+                        '{{ selection_context }}',
+                        'deselect',
+                        '{{ csrf_token }}'
+                    );"
+                    id = 'deselected-btn'
+            {% endif %}
             
             
             {% if study_context == 'focus' %}

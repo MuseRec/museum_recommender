@@ -39,6 +39,7 @@ def artuk_metadata(file):
     end = row_count(file)
     for idx, meta in enumerate(artuk_record_parser(file)):
         filename = meta["Filename"].values[0]
+                
         artwork = Artwork(
             art_id=splitext(filename)[0],
             collection=meta["Collection Name"].values[0],
@@ -56,6 +57,7 @@ def artuk_metadata(file):
             linked_art_terms=meta["Linked Art Terms"].values[0],
             img_file=filename,
             img_location=meta["Location"].values[0],
+            execution_date = meta['Execution Date'].values[0]
         )
         artwork.save()
 

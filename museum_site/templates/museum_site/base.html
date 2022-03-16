@@ -16,6 +16,7 @@
         <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
 
         <script src = "{% static 'js/collector.js' %}"></script>
+        <script src = "{% static 'js/functionality.js' %}"></script>
         {% comment %} <script src = "{% static 'js/analytics.js' %}"></script> {% endcomment %}
         <script>
             var csrf_token_js = '{{ csrf_token }}';
@@ -25,7 +26,7 @@
     </head>
     <body>
         <div class="container">
-            <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top" id='nav-bar'>
+            <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top justify-content-between" id='nav-bar'>
                 {% if provided_consent %}
                     <a  style="margin-left: 30px;" href="{% url 'museum_site:index' %}"
                         class = "navbar-brand"
@@ -55,6 +56,16 @@
                     {% endcomment %}
                 {% else %}
                     <a class = "navbar-brand"><img src="{% static 'img/MuseRecV2.png' %}" alt=""></a>
+                {% endif %}
+                {% if study_context == 'user' %}
+                    <div class='mr-sm-2'>
+                        <h6 class='mr-sm-2' style='color:white;'>Selected Artworks: {{ selection_count }}</h6>
+                        {% if selection_count >= 5 %}
+                            <input 
+                                type='submit' value='Move on' class='btn btn-success'
+                                onclick="return study_transition('{{ csrf_token }}');">
+                        {% endif %}
+                    </div>
                 {% endif %}
             </nav>
         </div>

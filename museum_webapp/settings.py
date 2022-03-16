@@ -40,6 +40,8 @@ if CONTEXT == 'user':
     CONDITION_INDEXES = {'meta': 0, 'image': 1, 'concatenated': 2}
     ORDER = ['random', 'model']
     ORDER_INDEXES = {'random': 0, 'model': 1}
+    SELECTION_UPPER_BOUND = 10
+    SELECTION_LOWER_BOUND = 5
 
 # Application definition
 
@@ -67,6 +69,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'
+    }
+}
 
 ROOT_URLCONF = 'museum_webapp.urls'
 

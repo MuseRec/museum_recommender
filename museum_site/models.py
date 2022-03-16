@@ -1,3 +1,4 @@
+from distutils.errors import LinkError
 from django.db import models
 
 AGE_CHOICES = [
@@ -59,6 +60,18 @@ PHYSICAL_VISITS = [
     ('four or five years', 'Every four or five years'),
     ('six years or longer', 'I have not been to a museum/art gallery in 6 years or longer'),
     ('never', 'I have never visited a museum/art gallery in person')
+]
+
+DISTRACTION_CHOICES = [
+    ('duck', 'Duck'), ('mouse', 'Mouse'), ('elephant', 'Elephant'), ('bumblebee', 'Bumblebee')
+]
+
+LIKERT_SCALE = [
+    ('completely disagree', 'Completely Disagree'),
+    ('disagree', 'Disagree'),
+    ('neutral', 'Neither disagree or agree'),
+    ('agree', 'Agree'),
+    ('completely agree', 'Completely Agree')
 ]
 
 
@@ -129,6 +142,8 @@ class Artwork(models.Model):
     img_file = models.CharField(max_length=512, null=True)
     img_location = models.CharField(max_length=1024, null=True)
 
+    execution_date = models.CharField(max_length = 512, null = True)
+
     def __str__(self):
         return f"{self.art_id}"
 
@@ -171,5 +186,109 @@ class UserCondition(models.Model):
     # the first condition they see (either random or model)
     order = models.CharField(max_length = 6) 
 
+    # what context the user is currently in (either: initial, random, or model)
+    current_context = models.CharField(max_length = 10)
+
     def __str__(self) -> str:
         return f"{self.user}: {self.condition}, {self.order}"
+
+
+class ArtworkSelected(models.Model):
+    """
+    """
+    # the user that is doing the selecting
+    user = models.ForeignKey(User, on_delete = models.CASCADE)
+
+    # the specific artwork that the user has selected
+    selected_artwork = models.ForeignKey(Artwork, on_delete = models.CASCADE)
+
+    # what the context of the selection is (either initial; random; or model)
+    selection_context = models.CharField(max_length = 10)
+
+    # the timestamp for when the selection occurred (probably the same across the selected five)
+    timestamp = models.DateTimeField()
+
+class DistractionTask(models.Model):
+    """
+    """
+    # the user that is doing the distraction task
+    user = models.ForeignKey(User, on_delete = models.CASCADE)
+
+    # the distraction choice for the question
+    distraction = models.CharField(max_length = 30, choices = DISTRACTION_CHOICES)
+
+    # the submission timestamp for the survey
+    submission_timestamp = models.DateTimeField()
+
+class PostStudy(models.Model):
+    """
+    """
+    # the user taking part
+    user = models.ForeignKey(User, on_delete = models.CASCADE)
+
+    # submission timestamp
+    submission_timestamp = models.DateTimeField()
+
+    # the part (either part one or two)
+    part = models.CharField(max_length = 10)
+
+    # PERCEIVED QUALITY
+    perceived_quality_one = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    perceived_quality_two = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    perceived_quality_three = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    perceived_quality_four = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    perceived_quality_five = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    perceived_quality_six = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+
+    # PERCEIVED SYSTEM EFFECTIVENESS AND FUN
+    perceived_effectiveness_one = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    perceived_effectiveness_two = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    perceived_effectiveness_three = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    perceived_effectiveness_four = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    perceived_effectiveness_five = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    perceived_effectiveness_six = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    perceived_effectiveness_seven = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    perceived_effectiveness_eight = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    perceived_effectiveness_nine = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    perceived_effectiveness_ten = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+
+    # CHOICE SATISFACTION
+    choice_satisfaction_one = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    choice_satisfaction_two = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    choice_satisfaction_three = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    choice_satisfaction_four = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    choice_satisfaction_five = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    choice_satisfaction_six = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    choice_satisfaction_seven = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    choice_satisfaction_eight = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    choice_satisfaction_nine = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+
+    # TEST AWARENESS
+    test_awareness_one = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    test_awareness_two = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    
+class PostStudyGeneral(models.Model):
+    """
+    """
+    # the user taking part 
+    user = models.ForeignKey(User, on_delete = models.CASCADE)
+
+    # submission timestamp
+    submission_timestamp = models.DateTimeField()
+
+    # intention to provide feedback
+    intention = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+
+    # GENERAL TRUST IN TECH
+    trust_one = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    trust_two = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    trust_three = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    trust_four = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    trust_five = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+
+    # MUSEUM ONLINE COLLECTION RELEVANT QUESTION
+    relevant_one = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    relevant_two = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    relevant_three = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    relevant_four = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+

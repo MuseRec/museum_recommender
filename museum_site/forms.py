@@ -1,5 +1,6 @@
 from django.forms import ModelForm, HiddenInput
 from django.core.validators import EMPTY_VALUES
+from django import forms 
 
 from .models import User, UserDemographic, DomainKnowledge
 

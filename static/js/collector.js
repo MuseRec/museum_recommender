@@ -41,3 +41,42 @@ function rating_event(artwork_id, rating_number, csrf_token) {
         }
     });
 }
+
+/**
+ * A function to save the selected image by the participant. This is trigged when
+ * they click submit on the artwork inline form
+ */
+function save_selected_artwork(artwork_id, selection_context, select_or_deselect, csrf_token) {
+    $.ajax({
+        type: "POST",
+        url: "/selected/",
+        data: {
+            "csrfmiddlewaretoken": csrf_token,
+            "artwork_id": artwork_id,
+            "selection_context": selection_context,
+            "select_or_deselect": select_or_deselect
+        },
+        success: function(data) {
+            $('#selected-btn').value('Selected!');
+        },
+        error: function(response) {
+            console.log('THIS IS THE RESPONSE: ' + response)
+        },
+        fail: function() {
+            console.log('saving selected artwork failed (' + artwork_id + ')');
+        }
+    });
+}
+
+/**
+ * A function to transition to the next stage of the study
+ */
+function study_transition(csrf_token) {
+    $.ajax({
+        type: "POST",
+        url: "/transition/",
+        data: {
+            "csrfmiddlewaretoken": csrf_token
+        }
+    });
+}

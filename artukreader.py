@@ -312,6 +312,8 @@ def artuk_record_parser(file, folder=None, **kwargs) -> pd.DataFrame:
             db_dict["Filename"] = row_dict["Filename"]
             db_dict["Location"] = row_dict["Location"]
 
+            db_dict['Execution Date'] = row_dict['Execution Date']
+
             # Parse dates and convert them to Earliest and Latest dates
             e_date = row_dict["Earliest Date"]
             l_date = row_dict["Latest Date"]

@@ -13,9 +13,9 @@
         {% include 'museum_site/domain_knowledge_form.html' %}
     {% endif %}
 
-    <div class="search-bar" style="position: relative; top: -3px;">
+    {% comment %} <div class="search-bar" style="position: relative; top: -3px;">
         {% include 'museum_site/searchbar.html' %}
-    </div>
+    </div> {% endcomment %}
 
     <hr class="separator"/>
 
@@ -23,14 +23,19 @@
         <div id = 'multi-item-example' class = 'carousel slide carousel-multi-item' data-ride = 'carousel'>
             <div class = 'carousel-inner' role = 'listbox'>
                 <div class='row'>
-                    {% for art in page_obj %}
+                    {% for art in artworks %}
                         <div class = 'col-md-2' style="padding-top: 20px; padding-bottom: 20px;">
                             <div class = 'card mb-2' id = 'artwork-card'>
                                 <div class='artwork-img-style'>
                                     <a href = "{% url 'museum_site:artwork' art.art_id %}"
                                         onclick = "return interaction_event('click', '{{ art.art_id }}', '{{ page_id }}', '{{ csrf_token }}');">
-                                        <img class = 'card-img-top' style="width: 150px; height: 180px; background-size: 300% 300%;" src = "{% static 'img/images/' %}{{ art.img_file }}"
-                                            alt = '{{ art.title|cut:"'" }}' />
+                                        {% if art.art_id in already_selected %}
+                                            <img class = 'card-img-top' style="width: 150px; height: 180px; background-size: 300% 300%; opacity: 0.25;" src = "{% static 'img/images/' %}{{ art.img_file }}"
+                                                alt = '{{ art.title|cut:"'" }}' />
+                                        {% else %}
+                                            <img class = 'card-img-top' style="width: 150px; height: 180px; background-size: 300% 300%;" src = "{% static 'img/images/' %}{{ art.img_file }}"
+                                                alt = '{{ art.title|cut:"'" }}' />
+                                        {% endif %}
                                     </a>
                                 </div>
                             </div>
