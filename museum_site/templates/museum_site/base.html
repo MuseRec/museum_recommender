@@ -61,9 +61,13 @@
                     <div class='mr-sm-2'>
                         <h6 class='mr-sm-2' style='color:white;'>Selected Artworks: {{ selection_count }}</h6>
                         {% if selection_count >= 5 %}
-                            <input 
+                            <form action='/transition/' method='post'>
+                                {% csrf_token %}
+                                <input type='submit' class='btn btn-success' value='Move on' name='move_on_button'>
+                            </form>
+                            {% comment %} <input 
                                 type='submit' value='Move on' class='btn btn-success'
-                                onclick="return study_transition('{{ csrf_token }}');">
+                                onclick="return study_transition('{{ csrf_token }}');"> {% endcomment %}
                         {% endif %}
                     </div>
                 {% endif %}

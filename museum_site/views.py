@@ -1,4 +1,5 @@
 from itertools import count
+from statistics import mode
 from tkinter import N
 from django.http.response import HttpResponseBadRequest
 from django.shortcuts import render, redirect
@@ -16,13 +17,14 @@ import operator
 import json
 
 from .forms import UserForm, UserDemographicForm, DomainKnowledgeForm
+from .forms import SelectedArtworkForm, StudyTransitionForm
 from .models import User, UserDemographic, Artwork, ArtworkVisited
 from .models import UserCondition, ArtworkSelected
 from collector.models import Interaction
 from recommendations.models import Similarities, DataRepresentation
 from .util import get_condition, get_order
 
-def index(request):
+def index(request, distraction_task = False):
     if (request.method == 'POST') and (settings.CONTEXT == 'user'):
         if 'information_sheet_form' in request.POST:
             return handle_information_sheet_post(request)
@@ -49,6 +51,9 @@ def index(request):
                 })
     else:
         if 'user_id' in request.session:
+            if distraction_task:
+                return handle_distraction_task(request)
+
             return handle_render_home_page(request)
         
         # if the context is the focus group
@@ -66,7 +71,6 @@ def index(request):
 
             return handle_render_home_page(request)
 
-        print('returning the user form')
         consent_form = UserForm()
         return render(request, "museum_site/index.html", {
             'provided_consent': False, 'consent_form': consent_form,
@@ -200,11 +204,14 @@ def artwork(request, artwork_id):
         timestamp=timezone.now()
     )
 
-    # get the number of artworks selected
-    selection_count = ArtworkSelected.objects.filter(
-        user = user, 
-        selection_context = user_condition.current_context
-    ).count()
+    # get the artwork that the user has selected
+    selected_artwork = ArtworkSelected.objects.filter(
+        user = user, selection_context = user_condition.current_context
+    )
+    print('selected artwork', selected_artwork.count())
+
+    # get the artworks that the user has already selected (to grey out the button)
+    already_selected = {art.selected_artwork.art_id for art in selected_artwork}
 
     context = {
         'provided_consent': True, 'page_id': 'art_' + artwork_id,
@@ -212,7 +219,9 @@ def artwork(request, artwork_id):
         'artists': artists,
         'artwork_rating': str(artwork_rating),
         'study_context': settings.CONTEXT,
-        'selection_count': selection_count
+        'selection_count': selected_artwork.count(),
+        'already_selected': already_selected,
+        'too_many_selected': request.session.get('too_many_selected', False)
     }
 
     # fetch the top 5 most similar artworks to this one, if the context is the focus group
@@ -238,6 +247,7 @@ def handle_render_home_page(request):
     user = User.objects.get(user_id = request.session['user_id'])
     user_condition = UserCondition.objects.get(user = user)
 
+    print(user_condition)
 
     if user_condition.current_context == 'initial':
         # get the artworks if they're stored in the cache
@@ -279,7 +289,25 @@ def handle_render_home_page(request):
         # if the cached current context is not model, then the user is entering this condition
         # for the first time.
         if cached_current_context != 'model':
-            # here we need to get the artwork based on the similarities 
+            # get the selected artworks by the user
+            selected_artworks = [
+                selected_art.selected_artwork
+                for selected_art in ArtworkSelected.objects.filter(
+                    user = user, selection_context = 'initial'
+                )
+            ]
+
+            # get the model condition that the user should see (either meta, image, or concatenated)
+            model_condition = DataRepresentation.objects.get(source = user_condition.condition)
+
+            # get the similar artworks based on those selected and the representation, order 
+            # by the score (descending), and take the top 30
+            artworks = Similarities.objects.filter(
+                representation = model_condition, art__in = selected_artworks
+            ).order_by('-score')[:30]
+
+            # get the artworks themselves 
+            artworks = [s_a.similar_art for s_a in artworks]
             
             # update the artwork and current context in the cache
             cache.set('artworks', artworks, timeout = None)
@@ -354,6 +382,154 @@ def handle_render_home_page(request):
     #             e.artist = ", ".join(json.loads(e.artist))
 
 
+def selected_artwork(request):
+    if request.method == 'POST':
+        form = SelectedArtworkForm(request.POST)
+        if form.is_valid():
+            user = User.objects.get(user_id = request.session['user_id'])
+            artwork = Artwork.objects.get(art_id = request.POST['artwork_id'])
+            user_condition = UserCondition.objects.get(user = user)
+            timestamp = timezone.now()
+
+            if form.cleaned_data['selection_button'] == 'Select':
+                # get the number of artworks that the user has already selected
+                number_selected = ArtworkSelected.objects.filter(
+                    user = user, selection_context = user_condition.current_context
+                ).count()
+
+                # if the number of selected artworks is greater than the upper bound
+                if number_selected >= settings.SELECTION_UPPER_BOUND:
+                    request.session['too_many_selected'] = True
+                    return redirect('museum_site:artwork', artwork_id = artwork.art_id)
+
+                # save that the user has selected the artwork
+                ArtworkSelected.objects.create(
+                    user = user, 
+                    selected_artwork = artwork,
+                    selection_context = user_condition.current_context, 
+                    timestamp = timestamp
+                )
+
+                # save it as an interaction event
+                Interaction.objects.create(
+                    user = user, 
+                    timestamp = timestamp, 
+                    content_id = artwork.art_id, 
+                    event = 'artwork-selected',
+                    page = 'art_' + artwork.art_id
+                )
+
+                return redirect('museum_site:artwork', artwork_id = artwork.art_id)
+            else: 
+                assert form.cleaned_data['selection_button'] == 'Deselect'
+
+                # delete the record from the database
+                ArtworkSelected.objects.filter(user = user, selected_artwork = artwork).delete()
+
+                # save it as an interaction event 
+                Interaction.objects.create(
+                    user = user,
+                    timestamp = timestamp, 
+                    content_id = artwork.art_id, 
+                    event = 'artwork-deselected',
+                    page = 'art_' + artwork.art_id
+                )
+
+                return redirect('museum_site:artwork', artwork_id = artwork.art_id)
+
+def transition_study_stage(request):
+    print('transition clicked')
+    if request.method == 'POST':
+        print('request is post')
+        form = StudyTransitionForm(request.POST)
+        print('is form valid?', form.is_valid())
+        if form.is_valid():
+            user = User.objects.get(user_id = request.session['user_id'])
+            user_condition = UserCondition.objects.get(user = user)
+            selection_count = ArtworkSelected.objects.filter(
+                user = user, selection_context = user_condition.current_context
+            ).count()
+
+            print('current user condition:', user_condition.current_context)
+
+            # if the number of artworks selected is between the lower and upper bound
+            if settings.SELECTION_LOWER_BOUND <= selection_count <= settings.SELECTION_UPPER_BOUND:
+                # and if the user is current in the initial context (just starting the study)
+                if user_condition.current_context == 'initial':
+                    # then we need to set their current context based on the first condition
+                    # the user should see (either random or model)
+                    if user_condition.order == 'random':
+                        user_condition.current_context = 'random'
+                    else:
+                        user_condition.current_context = 'model'
+                    user_condition.save() # update the user condition record in the DB
+
+                    print('updated user condition to:', user_condition.current_context)
+                    # redirect to the index; the updated user condition will change the 
+                    # artworks that the user sees.
+                    return redirect('museum_site:index')
+                else: # otherwise, they're transitioning between part one and two
+                    # if their current context is random and the first condition they should see
+                    # is random
+                    if user_condition.current_context == 'random' and user_condition.order == 'random':
+                        # then we need to update their current context to model and save it
+                        user_condition.current_context = 'model'
+                        user_condition.save()
+
+                        # redirect to the index
+                        return redirect('museum_site:index', distraction_task = True)
+                    # if their context is model and first condition is model
+                    elif user_condition.current_context == 'model' and user_condition.order == 'model':
+                        # then they should see the random condition, so update and save
+                        user_condition.current_context = 'random'
+                        user_condition.save()
+
+                        # redirect to the index
+                        return redirect('museum_site:index', distraction_task = True)
+                    # otherwise, they're at the end of the study and the post-study questionnaires
+                    # should be rendered
+                    else:
+                        pass
+                    
+def handle_distraction_task(request):
+    # TODO 
+    pass
+
+
+#             else:
+#                 # their current context is random and the first condition they should see is random
+#                 if user_condition.current_context == 'random' and user_condition.order == 'random':
+#                     # so update their current context to the model, save, and redirect
+#                     user_condition.current_context = 'model'
+#                     user_condition.save()
+
+#                     # WE NEED TO LOAD THE DISTRACTION TASK HERE
+
+#                     return 
+#                 # their current context is model and the first condition they should see is model
+#                 elif user_condition.current_context == 'model' and user_condition.order == 'model':
+#                     # so update their current context to random, save, and redirect
+#                     user_condition.current_context = 'random'
+#                     user_condition.save()
+
+#                     # WE NEED TO LOAD THE DISTRACTION TASK HERE
+
+#                     return
+#                 else: # they're at the end?
+#                     # otherwise, they've finished and we need to redirect to the final
+#                     # survey in the study.
+#                     pass
+#         else:
+#             # they haven't selected an appropriate amount to move on
+#             pass 
+#         # if the current context is initial, then they should go the next stage
+#         # which is determined by their first condition (order)
+
+        
+#         # otherwise, if it's either random or model, then they should go to the next
+#         # if their current_context = random and their condition = random, then we know that
+#         # their next stage should be model.
+
 @ensure_csrf_cookie
 def save_rating(request):
     if request.method == 'POST':
@@ -371,115 +547,3 @@ def save_rating(request):
         return HttpResponse('ok')
     else:
         return HttpResponseBadRequest('rating not posted to backend')
-
-@ensure_csrf_cookie
-def selected_artwork(request):
-    if request.method == 'POST':
-        user = User.objects.get(user_id = request.session['user_id'])
-        artwork = Artwork.objects.get(art_id = request.POST['artwork_id'])
-        user_condition = UserCondition.objects.get(user = user)
-        timestamp = timezone.now()
-
-        if request.POST['select_or_deselect'] == 'select':
-            # NEED TO CHECK HOW MANY THEY'VE SELECTED BEFORE THIS STEP
-            # get the number the user has selected
-            number_selected = ArtworkSelected.objects.filter(
-                user = user, selection_context = user_condition.current_context
-            ).count()
-
-            if number_selected >= settings.SELECTION_UPPER_BOUND:
-                return JsonResponse(
-                    {'status': 'selected more than the upper bound'},
-                    status = 400
-                )
-
-
-            ArtworkSelected.objects.create(
-                user = user,
-                selected_artwork = artwork,
-                selection_context = user_condition.current_context,
-                timestamp = timestamp
-            )
-        
-            Interaction.objects.create(
-                user = user, 
-                timestamp = timestamp,
-                content_id = artwork.art_id,
-                event = 'artwork-selected',
-                page = 'art_' + artwork.art_id
-            )
-        else:
-            assert request.POST['select_or_deselect'] == 'deselect'
-
-            ArtworkSelected.objects.filter(# remove the record
-                user = user, 
-                selected_artwork = artwork 
-            ).delete()
-
-            Interaction.objects.create(
-                user = user,
-                timestamp = timestamp, 
-                content_id = artwork.art_id, 
-                event = 'artwork-deselected',
-                page = 'art_' + artwork.art_id
-            )
-
-        return HttpResponse('ok')
-    else:
-        return HttpResponseBadRequest('selected artwork was not posted to the backend')
-
-@ensure_csrf_cookie
-def transition_study_stage(request):
-    if request.method == 'POST':   
-        user = User.objects.get(user_id = request.session['user_id'])
-        user_condition = UserCondition.objects.get(user = user)
-        selection_count = ArtworkSelected.objects.filter(
-            user = user, selection_context = user_condition.current_context
-        ).count()
-
-        # we first need to check that the number of selected artworks is between
-        # the range of 5 and 10, if it is then carry on, if not then we need to flag that somehow.
-        if settings.SELECTION_LOWER_BOUND <= selection_count <= settings.SELECTION_UPPER_BOUND:
-            # if they are currently in the initial context
-            if user_condition.current_context == 'initial':
-                # then we need to set their current context based on which condition they should
-                # see first, either random or model.
-                if user_condition.order == 'random':
-                    user_condition.current_context = 'random' 
-                else:
-                    user_condition.current_context = 'model'
-                user_condition.save()
-                return redirect('index')
-            else:
-                # their current context is random and the first condition they should see is random
-                if user_condition.current_context == 'random' and user_condition.order == 'random':
-                    # so update their current context to the model, save, and redirect
-                    user_condition.current_context = 'model'
-                    user_condition.save()
-
-                    # WE NEED TO LOAD THE DISTRACTION TASK HERE
-
-                    return 
-                # their current context is model and the first condition they should see is model
-                elif user_condition.current_context == 'model' and user_condition.order == 'model':
-                    # so update their current context to random, save, and redirect
-                    user_condition.current_context = 'random'
-                    user_condition.save()
-
-                    # WE NEED TO LOAD THE DISTRACTION TASK HERE
-
-                    return
-                else: # they're at the end?
-                    # otherwise, they've finished and we need to redirect to the final
-                    # survey in the study.
-                    pass
-        else:
-            # they haven't selected an appropriate amount to move on
-            pass 
-        # if the current context is initial, then they should go the next stage
-        # which is determined by their first condition (order)
-
-        
-        # otherwise, if it's either random or model, then they should go to the next
-        # if their current_context = random and their condition = random, then we know that
-        # their next stage should be model.

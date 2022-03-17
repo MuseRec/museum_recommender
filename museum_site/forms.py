@@ -2,7 +2,7 @@ from django.forms import ModelForm, HiddenInput
 from django.core.validators import EMPTY_VALUES
 from django import forms 
 
-from .models import User, UserDemographic, DomainKnowledge
+from .models import User, UserDemographic, DomainKnowledge, DistractionTask
 
 class UserForm(ModelForm):
     def __init__(self, *args, **kwargs):
@@ -63,3 +63,12 @@ class DomainKnowledgeForm(ModelForm):
             'view_collections': 'How often do you specifically look at collections online?',
             'physical_visits': 'How often do you physically visit a museum/art gallery'
         }
+
+class DistractionTaskForm(ModelForm):
+    pass 
+
+class SelectedArtworkForm(forms.Form):
+    selection_button = forms.CharField()
+
+class StudyTransitionForm(forms.Form):
+    move_on_button = forms.CharField()

@@ -4,6 +4,17 @@
 
 {% block content %}
     {% load static %}
+
+    {% if too_many_selected %}
+        <div class='alert alert-warning alert-dismissible fade show' role='alert'>
+            <strong>Too many artworks selected!</strong> You should deselect some artworks, the 
+            maximum number you can select is 10.
+            <button type='button' class='close' data-dismiss='alert' aria-label='Close'>
+                <span aria-hidden='true'>&times;</span>
+            </button>
+        </div>
+    {% endif %}
+
     <div class='row artwork-body'>
         <div class='col' style="margin-left: 0.25em;">
             <img src="{% static 'img/images/' %}{{ artwork.img_file }}" alt="{{ artwork.title }}"
@@ -130,25 +141,21 @@
             
             {% if study_context == 'user' %}
                 <br />
-                <input 
-                    type="submit" value="Pick this image" class="btn btn-success" name="include_artwork"
-                    onclick = "return save_selected_artwork(
-                        '{{ artwork.art_id }}', 
-                        '{{ selection_context }}',
-                        'select', 
-                        '{{ csrf_token }}'
-                    );"
-                    id="selected-btn"
-                />
-                <input 
-                    type="submit" value="Unpick this image" class="btn btn-danger" name="uninclude_artwork"
-                    onclick = "return save_selected_artwork(
-                        '{{ artwork.art_id }}', 
-                        '{{ selection_context }}',
-                        'deselect',
-                        '{{ csrf_token }}'
-                    );"
-                    id = 'deselected-btn'
+
+                <form action = '/selected/' method = 'post'>
+                    {% csrf_token %}
+                    {% if too_many_selected or artwork.art_id in already_selected %}
+                        <input type='submit' class='btn btn-success' value='Select' name='selection_button' disabled>
+                    {% else %}
+                        <input type='submit' class='btn btn-success' value='Select' name='selection_button'>
+                    {% endif %}
+                    {% if artwork.art_id in already_selected or selection_count == 0 or too_many_selected %}    
+                        <input type='submit' class='btn btn-danger' value='Deselect' name='selection_button'>
+                    {% else %}
+                        <input type='submit' class='btn btn-danger' value='Deselect' name='selection_button' disabled>
+                    {% endif %}
+                    <input type='hidden' value="{{ artwork.art_id }}" name='artwork_id'>
+                </form>
             {% endif %}
             
             
