@@ -2,7 +2,7 @@ from django.forms import ModelForm, HiddenInput
 from django.core.validators import EMPTY_VALUES
 from django import forms 
 
-from .models import User, UserDemographic, DomainKnowledge, DistractionTask
+from .models import PostStudy, PostStudyGeneral, User, UserDemographic, DomainKnowledge, DistractionTask
 
 class UserForm(ModelForm):
     def __init__(self, *args, **kwargs):
@@ -73,6 +73,79 @@ class DistractionTaskForm(ModelForm):
         model = DistractionTask
         fields = ('distraction',)
         labels = {'distraction': 'Which of the following animals is the lightest?'}
+
+class PostStudyForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(PostStudyForm, self).__init__(*args, **kwargs)
+        for key in self.fields:
+            self.fields[key].required = True 
+    
+    class Meta:
+        model = PostStudy
+        exclude = ('user', 'submission_timestamp', 'part')
+        labels = {
+            # PERCEIVED QUALITY
+            'perceived_quality_one': 'I liked the artworks shown by the system.',
+            'perceived_quality_two': 'The artworks fitted my preference',
+            'perceived_quality_three': 'The artworks were well-chosen',
+            'perceived_quality_four': 'The artworks were relevant',
+            'perceived_quality_five': 'The system showed me too many bad artworks',
+            'perceived_quality_six': 'I didn\'t like any of the artworks shown',
+            # SYSTEM EFFECTIVENESS AND FUN
+            'perceived_effectiveness_one': 'I have fun when I am using the system',
+            'perceived_effectiveness_two': 'I would recommend the system to others',
+            'perceived_effectiveness_three': 'Using the system is a pleasant experience',
+            'perceived_effectiveness_four': 'I can find interesting artworks with the system',
+            'perceived_effectiveness_five': 'The system showed me artworks I would usually not find',
+            'perceived_effectiveness_six': 'The system is useless',
+            'perceived_effectiveness_seven': 'The system makes me more aware of my choice option',
+            'perceived_effectiveness_eight': 'I make more informed choices with the system',
+            'perceived_effectiveness_nine': 'I can find better items without the help of the system',
+            'perceived_effectiveness_ten': 'The system showed useful items',
+            # CHOICE SATISFACTION
+            'choice_satisfaction_one': 'I like the artworks I have seen',
+            'choice_satisfaction_two': 'I was excited about the artworks shown',
+            'choice_satisfaction_three': 'I enjoyed seeing the artworks shown to me',
+            'choice_satisfaction_four': 'The artworks shown to me were diverse',
+            'choice_satisfaction_five': 'The artworks shown to me were novel',
+            'choice_satisfaction_six': 'The system offered serendipitous items',
+            'choice_satisfaction_seven': 'The artworks I have seen were a waste of time',
+            'choice_satisfaction_eight': 'The shown artworks fitted my preference',
+            'choice_satisfaction_nine': 'I would recommend some of the shown artworks to family and friends',
+            # TEST AWARENESS
+            'test_awareness_one': 'I am aware that the system showed me recommendations',
+            'test_awareness_two': 'I am aware that items in this part were specifically chosen to suit my choice of artworks'
+        }
+        widgets = {
+            question: forms.RadioSelect()
+            for question, _ in labels.items()
+        }
+
+class PostStudyGeneralForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(PostStudyGeneralForm, self).__init__(*args, **kwargs)
+        for key in self.fields:
+            self.fields[key].required = True 
+
+    class Meta:
+        model = PostStudyGeneral
+        exclude = ('user', 'submission_timestamp')
+        labels = {
+            'intention': 'I didn\'t mind having to choose artworks',
+            'trust_one': 'Technology never works',
+            'trust_two': 'I trust the system I have just used',
+            'trust_three': 'Technology should always be explainable',
+            'trust_four': 'I am not fussed about how things work in the background as long as the technology works',
+            'trust_five': 'I am generally questioning what happens to my personal data',
+            'relevant_one': 'I prefer a classic keyword search compared to this system',
+            'relevant_two': 'The system is not suitable to display artworks',
+            'relevant_three': 'Museum online collections are generally boring',
+            'relevant_four': 'I do not need museum online collections'
+        }
+        widgets = {
+            question: forms.RadioSelect()
+            for question, _ in labels.items()
+        }
 
 class SelectedArtworkForm(forms.Form):
     selection_button = forms.CharField()

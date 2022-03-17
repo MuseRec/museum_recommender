@@ -1,0 +1,44 @@
+{% load crispy_forms_tags %}
+
+{% if load_post_study %}
+    <div class="modal fade" id="post_study_form_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    {% if part == 'part_one' %}
+                        <h5 class="modal-title" id="post_study_form_modal_title">Part 1</h5>
+                    {% else %}
+                        <h5 class="modal-title" id="post_study_form_modal_title">Part 2</h5>
+                    {% endif %}
+                </div>
+                <div class="modal-body">
+                    {% if part == 'part_one' %}
+                        <div class='alert alert-warning' role='alert'>
+                            Please think of <strong>PART 1</strong> (the first half of the study) when answering the following questions.
+                        </div>
+                    {% else %}
+                        <div class='alert alert-warning' role='alert'>
+                            Please think of <strong>PART 2</strong> (the first half of the study) when answering the following questions.
+                        </div>
+                    {% endif %}
+                    <form method = "post">
+                        {% csrf_token %}
+                        {{ post_study_form|crispy }}
+                        <input type = "submit" value = "Submit" class = "btn btn-primary" name = "post_study_form">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>    
+{% endif %}
+
+{% if load_post_study %}
+    <script type = "text/javascript">
+        $(window).on('load', function() {
+            $('#post_study_form_modal').modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+        });
+    </script>
+{% endif %}

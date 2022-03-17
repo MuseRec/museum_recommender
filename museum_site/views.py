@@ -17,7 +17,7 @@ import operator
 import json
 
 from .forms import DistractionTaskForm, UserForm, UserDemographicForm, DomainKnowledgeForm
-from .forms import SelectedArtworkForm, StudyTransitionForm
+from .forms import SelectedArtworkForm, StudyTransitionForm, PostStudyForm, PostStudyGeneralForm
 from .models import User, UserDemographic, Artwork, ArtworkVisited
 from .models import UserCondition, ArtworkSelected
 from collector.models import Interaction
@@ -481,10 +481,14 @@ def transition_study_stage(request):
                 else: 
                     # if their current context is random and the first condition they should see
                     # is random
+                    print('current context', user_condition.current_context)
+                    print('order', user_condition.order)
                     if user_condition.current_context == 'random' and user_condition.order == 'random':
                         # then we need to update their current context to model and save it
                         user_condition.current_context = 'model'
                         user_condition.save()
+
+                        print('updated context to', user_condition.current_context)
 
                         request.session['distraction_task'] = True
 
@@ -496,6 +500,8 @@ def transition_study_stage(request):
                         user_condition.current_context = 'random'
                         user_condition.save()
 
+                        print('updated context to', user_condition.current_context)
+
                         request.session['distraction_task'] = True
 
                         # redirect to the index
@@ -503,9 +509,8 @@ def transition_study_stage(request):
                     # otherwise, they're at the end of the study and the post-study questionnaires
                     # should be rendered
                     else:
-                        pass
-
-                        # add the 'part' for the post-study bit into the session here?
+                        print('they are in the endgame now!')
+                        return handle_post_study(request)
 
                     
 def handle_distraction_task(request):
@@ -519,12 +524,42 @@ def handle_distraction_task(request):
 
         new_submission.save()
 
-        request.session['distraction_task'] = False
+        del request.session['distraction_task']
 
         return handle_render_home_page(request)
 
 def handle_post_study(request):
-    pass 
+    if request.method == 'POST':
+        post_study_form = PostStudyForm(request.POST)
+        if post_study_form.is_valid():
+            new_submission = post_study_form.save(commit = False)
+
+            # assign the user, submission timestamp, and the part
+            new_submission.user = User.objects.get(user_id = request.session['user_id'])
+            new_submission.submission_timestamp = timezone.now()
+            new_submission.part = request.session['post_study_part']
+
+            new_submission.save()
+
+            print('new_submission_saved')
+
+            return handle_post_study(request)
+    else:
+        # if the part is in the session, then they must have done part one
+        if request.session.get('post_study_part'):
+            request.session['post_study_part'] = 'part_two'
+        else:
+            request.session['post_study_part'] = 'part_one'
+        
+        return render(request, 'museum_site/index.html', {
+            'provided_consent': True, 
+            'provided_demographics': True, 
+            'study_context': settings.CONTEXT,
+            'load_domain': False, 
+            'post_study_form': PostStudyForm(), 
+            'part': request.session['post_study_part'],
+            'load_post_study': True 
+        }) 
 
 def handle_post_study_general(request):
     pass 
