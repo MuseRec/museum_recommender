@@ -65,7 +65,14 @@ class DomainKnowledgeForm(ModelForm):
         }
 
 class DistractionTaskForm(ModelForm):
-    pass 
+    def __init__(self, *args, **kwargs):
+        super(DistractionTaskForm, self).__init__(*args, **kwargs)
+        self.fields['distraction'].required = True 
+    
+    class Meta: 
+        model = DistractionTask
+        fields = ('distraction',)
+        labels = {'distraction': 'Which of the following animals is the lightest?'}
 
 class SelectedArtworkForm(forms.Form):
     selection_button = forms.CharField()

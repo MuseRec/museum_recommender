@@ -16,7 +16,7 @@ import uuid
 import operator
 import json
 
-from .forms import UserForm, UserDemographicForm, DomainKnowledgeForm
+from .forms import DistractionTaskForm, UserForm, UserDemographicForm, DomainKnowledgeForm
 from .forms import SelectedArtworkForm, StudyTransitionForm
 from .models import User, UserDemographic, Artwork, ArtworkVisited
 from .models import UserCondition, ArtworkSelected
@@ -24,7 +24,7 @@ from collector.models import Interaction
 from recommendations.models import Similarities, DataRepresentation
 from .util import get_condition, get_order
 
-def index(request, distraction_task = False):
+def index(request):
     if (request.method == 'POST') and (settings.CONTEXT == 'user'):
         if 'information_sheet_form' in request.POST:
             return handle_information_sheet_post(request)
@@ -49,10 +49,21 @@ def index(request, distraction_task = False):
                     'consent_required_before_demographic': True,
                     'study_context': settings.CONTEXT
                 })
+        elif 'distraction_form' in request.POST:
+            return handle_distraction_task(request)
     else:
         if 'user_id' in request.session:
-            if distraction_task:
-                return handle_distraction_task(request)
+            if 'distraction_task' in request.session:
+                return render(
+                    request, 'museum_site/index.html', {
+                        'provided_consent': True, 
+                        'provided_demographics': True, 
+                        'study_context': settings.CONTEXT,
+                        'load_domain': False, 
+                        'load_distraction': True,
+                        'distraction_form': DistractionTaskForm()
+                    }
+                )
 
             return handle_render_home_page(request)
         
@@ -440,9 +451,7 @@ def selected_artwork(request):
 def transition_study_stage(request):
     print('transition clicked')
     if request.method == 'POST':
-        print('request is post')
         form = StudyTransitionForm(request.POST)
-        print('is form valid?', form.is_valid())
         if form.is_valid():
             user = User.objects.get(user_id = request.session['user_id'])
             user_condition = UserCondition.objects.get(user = user)
@@ -468,7 +477,8 @@ def transition_study_stage(request):
                     # redirect to the index; the updated user condition will change the 
                     # artworks that the user sees.
                     return redirect('museum_site:index')
-                else: # otherwise, they're transitioning between part one and two
+                # otherwise, they're transitioning between part one and two or to part-two -> end
+                else: 
                     # if their current context is random and the first condition they should see
                     # is random
                     if user_condition.current_context == 'random' and user_condition.order == 'random':
@@ -476,24 +486,48 @@ def transition_study_stage(request):
                         user_condition.current_context = 'model'
                         user_condition.save()
 
+                        request.session['distraction_task'] = True
+
                         # redirect to the index
-                        return redirect('museum_site:index', distraction_task = True)
+                        return redirect('museum_site:index')
                     # if their context is model and first condition is model
                     elif user_condition.current_context == 'model' and user_condition.order == 'model':
                         # then they should see the random condition, so update and save
                         user_condition.current_context = 'random'
                         user_condition.save()
 
+                        request.session['distraction_task'] = True
+
                         # redirect to the index
-                        return redirect('museum_site:index', distraction_task = True)
+                        return redirect('museum_site:index')
                     # otherwise, they're at the end of the study and the post-study questionnaires
                     # should be rendered
                     else:
                         pass
+
+                        # add the 'part' for the post-study bit into the session here?
+
                     
 def handle_distraction_task(request):
-    # TODO 
-    pass
+    distraction_form = DistractionTaskForm(request.POST)
+    if distraction_form.is_valid():
+        new_submission = distraction_form.save(commit = False)
+        
+        # assign the user and the submission timestamp
+        new_submission.user = User.objects.get(user_id = request.session['user_id'])
+        new_submission.submission_timestamp = timezone.now()
+
+        new_submission.save()
+
+        request.session['distraction_task'] = False
+
+        return handle_render_home_page(request)
+
+def handle_post_study(request):
+    pass 
+
+def handle_post_study_general(request):
+    pass 
 
 
 #             else:

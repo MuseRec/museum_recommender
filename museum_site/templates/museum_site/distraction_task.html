@@ -1,0 +1,31 @@
+{% load crispy_forms_tags %}
+
+{% if load_distraction %}
+    <div class="modal fade" id="distraction_form_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="distraction_form_modal_title">Domain Knowledge</h5>
+                </div>
+                <div class="modal-body">
+                    <form method = "post">
+                        {% csrf_token %}
+                        {{ distraction_form|crispy }}
+                        <input type = "submit" value = "Submit" class = "btn btn-primary" name = "distraction_form">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>    
+{% endif %}
+
+{% if load_distraction %}
+    <script type = "text/javascript">
+        $(window).on('load', function() {
+            $('#distraction_form_modal').modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+        });
+    </script>
+{% endif %}
