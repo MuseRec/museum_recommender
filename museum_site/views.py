@@ -19,7 +19,7 @@ import json
 from .forms import DistractionTaskForm, UserForm, UserDemographicForm, DomainKnowledgeForm
 from .forms import SelectedArtworkForm, StudyTransitionForm, PostStudyForm, PostStudyGeneralForm
 from .models import User, UserDemographic, Artwork, ArtworkVisited
-from .models import UserCondition, ArtworkSelected
+from .models import UserCondition, ArtworkSelected, RecommendedArtwork
 from collector.models import Interaction
 from recommendations.models import Similarities, DataRepresentation
 from .util import get_condition, get_order
@@ -266,8 +266,9 @@ def handle_render_home_page(request):
 
         # if there aren't any stored artworks, i.e., the first the user joins
         if artworks is None:
-            # then get a set of 30 artworks
-            artworks = Artwork.objects.order_by('?')[:30]
+            # get the artworks that are in the initial set and randomise
+            artworks = Artwork.objects.filter(art_id__in = settings.INITIAL_ARTWORKS).order_by('?')
+            print(artworks)
 
             # store them in the cache, without a timeout.
             cache.set('artworks', artworks, timeout = None)
@@ -286,6 +287,14 @@ def handle_render_home_page(request):
         if cached_current_context != 'random':
             # get a random set of 30 artworks 
             artworks = Artwork.objects.order_by('?')[:30]
+
+            # save the artworks, with the user, and the condition in the database
+            for art_work in artworks:
+                RecommendedArtwork.objects.create(
+                    user = user, 
+                    recommended_artwork = art_work, 
+                    recommendation_context = 'random'
+                )
 
             # update the artwork and current context in the cache
             cache.set('artworks', artworks, timeout = None)
@@ -319,6 +328,14 @@ def handle_render_home_page(request):
 
             # get the artworks themselves 
             artworks = [s_a.similar_art for s_a in artworks]
+
+            # save the artworks, with the user and the condition, in the database
+            for art_work in artworks:
+                RecommendedArtwork.objects.create(
+                    user = user, 
+                    recommended_artwork = art_work, 
+                    recommendation_context = 'random'
+                )
             
             # update the artwork and current context in the cache
             cache.set('artworks', artworks, timeout = None)

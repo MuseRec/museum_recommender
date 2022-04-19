@@ -67,11 +67,11 @@ DISTRACTION_CHOICES = [
 ]
 
 LIKERT_SCALE = [
-    ('completely disagree', 'Completely Disagree'),
+    ('strongly disagree', 'Strongly Disagree'),
     ('disagree', 'Disagree'),
     ('neutral', 'Neither disagree or agree'),
     ('agree', 'Agree'),
-    ('completely agree', 'Completely Agree')
+    ('strongly agree', 'Strongly Agree')
 ]
 
 
@@ -207,6 +207,18 @@ class ArtworkSelected(models.Model):
 
     # the timestamp for when the selection occurred (probably the same across the selected five)
     timestamp = models.DateTimeField()
+
+class RecommendedArtwork(models.Model):
+    """
+    """
+    # the user that the artwork has been recommended too
+    user = models.ForeignKey(User, on_delete = models.CASCADE)
+
+    # the recommended artwork
+    recommended_artwork = models.ForeignKey(Artwork, on_delete = models.CASCADE)
+
+    # the context, i.e., random or model-based (+ model type)
+    recommendation_context = models.CharField(max_length = 30)
 
 class DistractionTask(models.Model):
     """

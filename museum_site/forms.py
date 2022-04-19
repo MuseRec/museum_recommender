@@ -90,7 +90,7 @@ class PostStudyForm(ModelForm):
             'perceived_quality_three': 'The artworks were well-chosen',
             'perceived_quality_four': 'The artworks were relevant',
             'perceived_quality_five': 'The system showed me too many bad artworks',
-            'perceived_quality_six': 'I didn\'t like any of the artworks shown',
+            'perceived_quality_six': 'I did not like any of the artworks shown',
             # SYSTEM EFFECTIVENESS AND FUN
             'perceived_effectiveness_one': 'I have fun when I am using the system',
             'perceived_effectiveness_two': 'I would recommend the system to others',
@@ -131,7 +131,7 @@ class PostStudyGeneralForm(ModelForm):
         model = PostStudyGeneral
         exclude = ('user', 'submission_timestamp')
         labels = {
-            'intention': 'I didn\'t mind having to choose artworks',
+            'intention': 'I did not mind having to choose artworks',
             'trust_one': 'Technology never works',
             'trust_two': 'I trust the system I have just used',
             'trust_three': 'Technology should always be explainable',
