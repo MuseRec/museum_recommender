@@ -41,3 +41,12 @@ html body {
     --text-artwork-color: #4f301d;
     /* old colour definitions: brown: #724629, gray-dark: /*#212529 */
 }
+
+ul#post-study-question li {
+    display: inline-block
+}
+
+.radio {
+    display: inline-block;
+}
+

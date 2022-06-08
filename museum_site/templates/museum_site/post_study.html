@@ -1,0 +1,50 @@
+{% extends "museum_site/base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block content %} 
+
+    {% load static %}
+
+    <div class="container">
+        <div class="row">
+            {% if part == 'part_one' %}
+                <h5>Part 1</h5>
+            {% elif part == 'part_two' %}
+                <h5>Part 2</h5>
+            {% else %}
+                <h5>General</h5>
+            {% endif %}
+        </div>
+        {% if part != 'general' %}
+            <div class="row">
+                {% if part == 'part_one' %}
+                    <div class='alert alert-warning' role='alert'>
+                        Please think of <strong>PART 1</strong> (the first half of the study) when answering the following questions.
+                    </div>
+                {% elif part == 'part_two' %}
+                    <div class='alert alert-warning' role='alert'>
+                        Please think of <strong>PART 2</strong> (the first half of the study) when answering the following questions.
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+        <div class="row">
+            <form action="{% url 'museum_site:post-study' part %}" method="post">
+                {% csrf_token %}
+                <!-- {{ post_study_form|crispy}} -->
+                {% for field in post_study_form %}
+                    <label for="{{ field.id_for_label }}">
+                        {{ field.choice_label }}
+                        <span class="radio">{{ field }}</span>
+                    </label>
+                {% endfor %}
+                <input type="submit" value="Submit" class="btn btn-success" name="post_study_form">
+                <input type="hidden" value="{{ part }}" name="study_id">
+            </form>
+        </div>
+
+        <hr />
+    </div>
+
+{% endblock content %}

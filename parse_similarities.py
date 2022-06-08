@@ -63,14 +63,14 @@ def write_to_similarities_db(file_name, concat = True):
 
 def main():
     # write the representations to the database
-    write_data_representations()
-    print('data representations written to db')
+    # write_data_representations()
+    # print('data representations written to db')
 
     """
         There is an issue with missing ID's in the database and it's not clear
         as to why. This is something that needs revisiting for the user study.
     """
-
+    # exit()
     csv_files = [
         'meta_similarties.csv', 
         'image_similarities.csv', 
@@ -78,7 +78,7 @@ def main():
     ]
 
     missing_images = []
-    for f_name in [csv_files[-1]]:
+    for f_name in csv_files:
         print(f"Parsing {f_name}...")
         missing = write_to_similarities_db(f_name)
         missing_images += missing
@@ -86,9 +86,9 @@ def main():
     missing_images = set(missing_images)
     print(len(missing_images))
 
-    # print(f"Total number missing: {len(missing_images)}")
-    # with open('models/missing_images.json', 'w') as f:
-    #     j.dump(missing_images, f)
+    print(f"Total number missing: {len(missing_images)}")
+    with open('models/missing_images.json', 'w') as f:
+        j.dump(missing_images, f)
 
     # with open('models/missing_images.json', 'r') as f:
     #     missing = j.load(f)

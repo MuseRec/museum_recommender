@@ -25,6 +25,7 @@
                         {% csrf_token %}
                         {{ post_study_form|crispy }}
                         <input type = "submit" value = "Submit" class = "btn btn-primary" name = "post_study_form">
+                        <input type='hidden' value="post_study_form_submiited" name='hidden_post_study_form'>
                     </form>
                 </div>
             </div>

@@ -1,3 +1,4 @@
+from distutils.archive_util import make_archive
 from django.forms import ModelForm, HiddenInput
 from django.core.validators import EMPTY_VALUES
 from django import forms 
@@ -74,6 +75,7 @@ class DistractionTaskForm(ModelForm):
         fields = ('distraction',)
         labels = {'distraction': 'Which of the following animals is the lightest?'}
 
+
 class PostStudyForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(PostStudyForm, self).__init__(*args, **kwargs)
@@ -117,7 +119,11 @@ class PostStudyForm(ModelForm):
             'test_awareness_two': 'I am aware that items in this part were specifically chosen to suit my choice of artworks'
         }
         widgets = {
-            question: forms.RadioSelect()
+            question: forms.RadioSelect(
+                attrs = {
+                    'class': 'inline'
+                }
+            )
             for question, _ in labels.items()
         }
 
@@ -143,7 +149,11 @@ class PostStudyGeneralForm(ModelForm):
             'relevant_four': 'I do not need museum online collections'
         }
         widgets = {
-            question: forms.RadioSelect()
+            question: forms.RadioSelect(
+                attrs = {
+                    'class': 'inline'
+                }
+            )
             for question, _ in labels.items()
         }
 

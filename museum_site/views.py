@@ -112,6 +112,10 @@ def handle_information_sheet_post(request):
         # assign to a condition and order 
         condition = get_condition()
         order = get_order()
+
+        print('condition', condition)
+        print('order', order)
+
         UserCondition.objects.create(
             user = new_user, 
             condition = condition,
@@ -232,7 +236,8 @@ def artwork(request, artwork_id):
         'study_context': settings.CONTEXT,
         'selection_count': selected_artwork.count(),
         'already_selected': already_selected,
-        'too_many_selected': request.session.get('too_many_selected', False)
+        'too_many_selected': request.session.get('too_many_selected', False),
+        'is_artwork_page': True
     }
 
     # fetch the top 5 most similar artworks to this one, if the context is the focus group
@@ -380,35 +385,6 @@ def handle_render_home_page(request):
 
     return render(request, 'museum_site/index.html', context)
 
-    # if there is a search request
-    # query = None
-    # if request.GET.get('search'):
-    #     query = request.GET.get('search').strip()
-    #     art = Artwork.objects.filter(
-    #         Q(title__icontains=query)
-    #         | Q(artist__icontains=query)
-    #         | Q(medium__icontains=query)
-    #         | reduce(operator.or_, (Q(title__icontains = x) for x in query.split(' ')))
-    #         | reduce(operator.or_, (Q(artist__icontains = x) for x in query.split(' ')))
-    #         | reduce(operator.or_, (Q(medium__icontains=x) for x in query.split(' ')))
-    #     )
-    #     # art = Artwork.objects.filter(
-    #     #     complex_query(query, "title") |
-    #     #     complex_query(query, "artist") |
-    #     #     complex_query(query, "medium")
-    #     # )
-    # else:
-    #     art = Artwork.objects.all()
-
-    # Convert ot list
-    # for e in art:
-    #     if e.artist:
-    #         if e.artist.find("unknown") != -1:
-    #             # e.artist = ["Unknown artist"]
-    #             e.artist = "Unknown artist"
-    #         else:
-    #             e.artist = ", ".join(json.loads(e.artist))
-
 
 def selected_artwork(request):
     if request.method == 'POST':
@@ -466,8 +442,8 @@ def selected_artwork(request):
                 return redirect('museum_site:artwork', artwork_id = artwork.art_id)
 
 def transition_study_stage(request):
-    print('transition clicked')
-    if request.method == 'POST':
+    # print('transition clicked')
+    if request.method == 'POST' and 'load_post_study' not in request.session:
         form = StudyTransitionForm(request.POST)
         if form.is_valid():
             user = User.objects.get(user_id = request.session['user_id'])
@@ -476,7 +452,7 @@ def transition_study_stage(request):
                 user = user, selection_context = user_condition.current_context
             ).count()
 
-            print('current user condition:', user_condition.current_context)
+            # print('current user condition:', user_condition.current_context)
 
             # if the number of artworks selected is between the lower and upper bound
             if settings.SELECTION_LOWER_BOUND <= selection_count <= settings.SELECTION_UPPER_BOUND:
@@ -490,7 +466,7 @@ def transition_study_stage(request):
                         user_condition.current_context = 'model'
                     user_condition.save() # update the user condition record in the DB
 
-                    print('updated user condition to:', user_condition.current_context)
+                    # print('updated user condition to:', user_condition.current_context)
                     # redirect to the index; the updated user condition will change the 
                     # artworks that the user sees.
                     return redirect('museum_site:index')
@@ -498,8 +474,8 @@ def transition_study_stage(request):
                 else: 
                     # if their current context is random and the first condition they should see
                     # is random
-                    print('current context', user_condition.current_context)
-                    print('order', user_condition.order)
+                    # print('current context', user_condition.current_context)
+                    # print('order', user_condition.order)
                     if user_condition.current_context == 'random' and user_condition.order == 'random':
                         # then we need to update their current context to model and save it
                         user_condition.current_context = 'model'
@@ -517,7 +493,7 @@ def transition_study_stage(request):
                         user_condition.current_context = 'random'
                         user_condition.save()
 
-                        print('updated context to', user_condition.current_context)
+                        # print('updated context to', user_condition.current_context)
 
                         request.session['distraction_task'] = True
 
@@ -527,7 +503,12 @@ def transition_study_stage(request):
                     # should be rendered
                     else:
                         print('they are in the endgame now!')
-                        return handle_post_study(request)
+                        print('request method', request.method)
+                        request.method = 'GET'
+                        # return handle_post_study(request)
+                        return redirect('museum_site:post-study', which_form = 'part_one')
+
+                        # this is going to have to be another link, isn't it.
 
                     
 def handle_distraction_task(request):
@@ -545,76 +526,64 @@ def handle_distraction_task(request):
 
         return handle_render_home_page(request)
 
-def handle_post_study(request):
+def post_study(request, which_form):
     if request.method == 'POST':
-        post_study_form = PostStudyForm(request.POST)
+        study_id = request.POST['study_id']
+
+        if study_id == 'general':
+            print('posting general')
+            post_study_form = PostStudyGeneralForm(request.POST)
+        else:
+            print('posting', study_id)
+            post_study_form = PostStudyForm(request.POST)
+
         if post_study_form.is_valid():
             new_submission = post_study_form.save(commit = False)
 
             # assign the user, submission timestamp, and the part
             new_submission.user = User.objects.get(user_id = request.session['user_id'])
             new_submission.submission_timestamp = timezone.now()
-            new_submission.part = request.session['post_study_part']
+
+            if study_id != 'general':
+                new_submission.part = study_id
 
             new_submission.save()
 
-            print('new_submission_saved')
+            print('saved!')
 
-            return handle_post_study(request)
+            if study_id != 'general':
+                if study_id == 'part_two':
+                    # they've done both part one and two, now load the general form
+                    return redirect('museum_site:post-study', which_form = 'general')
+                else:
+                    # otherwise we want to just load part two.
+                    return redirect('museum_site:post-study', which_form = 'part_two')
+            else:
+                # we render the thank you page
+                return redirect('museum_site:thank-you') 
     else:
-        # if the part is in the session, then they must have done part one
-        if request.session.get('post_study_part'):
-            request.session['post_study_part'] = 'part_two'
+        # if it's a request for general form, then return that
+        if which_form == 'general':
+            print('which form == general')
+            return render(request, 'museum_site/post_study.html', {
+                'post_study_form': PostStudyGeneralForm(),
+                'part': 'general'    
+            })
+        elif which_form == 'part_two':
+            print('which form == part_two')
+            return render(request, 'museum_site/post_study.html', {
+                'post_study_form': PostStudyForm(), 
+                'part': 'part_two'
+            })
         else:
-            request.session['post_study_part'] = 'part_one'
-        
-        return render(request, 'museum_site/index.html', {
-            'provided_consent': True, 
-            'provided_demographics': True, 
-            'study_context': settings.CONTEXT,
-            'load_domain': False, 
-            'post_study_form': PostStudyForm(), 
-            'part': request.session['post_study_part'],
-            'load_post_study': True 
-        }) 
+            print('which form == part_one')
+            return render(request, 'museum_site/post_study.html', {
+                'post_study_form': PostStudyForm(), 
+                'part': 'part_one'
+            })
 
-def handle_post_study_general(request):
-    pass 
-
-
-#             else:
-#                 # their current context is random and the first condition they should see is random
-#                 if user_condition.current_context == 'random' and user_condition.order == 'random':
-#                     # so update their current context to the model, save, and redirect
-#                     user_condition.current_context = 'model'
-#                     user_condition.save()
-
-#                     # WE NEED TO LOAD THE DISTRACTION TASK HERE
-
-#                     return 
-#                 # their current context is model and the first condition they should see is model
-#                 elif user_condition.current_context == 'model' and user_condition.order == 'model':
-#                     # so update their current context to random, save, and redirect
-#                     user_condition.current_context = 'random'
-#                     user_condition.save()
-
-#                     # WE NEED TO LOAD THE DISTRACTION TASK HERE
-
-#                     return
-#                 else: # they're at the end?
-#                     # otherwise, they've finished and we need to redirect to the final
-#                     # survey in the study.
-#                     pass
-#         else:
-#             # they haven't selected an appropriate amount to move on
-#             pass 
-#         # if the current context is initial, then they should go the next stage
-#         # which is determined by their first condition (order)
-
-        
-#         # otherwise, if it's either random or model, then they should go to the next
-#         # if their current_context = random and their condition = random, then we know that
-#         # their next stage should be model.
+def thank_you(request):
+    return render(request, 'museum_site/thankyou.html')
 
 @ensure_csrf_cookie
 def save_rating(request):
@@ -633,3 +602,34 @@ def save_rating(request):
         return HttpResponse('ok')
     else:
         return HttpResponseBadRequest('rating not posted to backend')
+
+
+
+    # if there is a search request
+    # query = None
+    # if request.GET.get('search'):
+    #     query = request.GET.get('search').strip()
+    #     art = Artwork.objects.filter(
+    #         Q(title__icontains=query)
+    #         | Q(artist__icontains=query)
+    #         | Q(medium__icontains=query)
+    #         | reduce(operator.or_, (Q(title__icontains = x) for x in query.split(' ')))
+    #         | reduce(operator.or_, (Q(artist__icontains = x) for x in query.split(' ')))
+    #         | reduce(operator.or_, (Q(medium__icontains=x) for x in query.split(' ')))
+    #     )
+    #     # art = Artwork.objects.filter(
+    #     #     complex_query(query, "title") |
+    #     #     complex_query(query, "artist") |
+    #     #     complex_query(query, "medium")
+    #     # )
+    # else:
+    #     art = Artwork.objects.all()
+
+    # Convert ot list
+    # for e in art:
+    #     if e.artist:
+    #         if e.artist.find("unknown") != -1:
+    #             # e.artist = ["Unknown artist"]
+    #             e.artist = "Unknown artist"
+    #         else:
+    #             e.artist = ", ".join(json.loads(e.artist))

@@ -245,39 +245,39 @@ class PostStudy(models.Model):
     part = models.CharField(max_length = 10)
 
     # PERCEIVED QUALITY
-    perceived_quality_one = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    perceived_quality_two = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    perceived_quality_three = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    perceived_quality_four = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    perceived_quality_five = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    perceived_quality_six = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    perceived_quality_one = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    perceived_quality_two = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    perceived_quality_three = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    perceived_quality_four = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    perceived_quality_five = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    perceived_quality_six = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
 
     # PERCEIVED SYSTEM EFFECTIVENESS AND FUN
-    perceived_effectiveness_one = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    perceived_effectiveness_two = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    perceived_effectiveness_three = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    perceived_effectiveness_four = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    perceived_effectiveness_five = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    perceived_effectiveness_six = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    perceived_effectiveness_seven = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    perceived_effectiveness_eight = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    perceived_effectiveness_nine = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    perceived_effectiveness_ten = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    perceived_effectiveness_one = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    perceived_effectiveness_two = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    perceived_effectiveness_three = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    perceived_effectiveness_four = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    perceived_effectiveness_five = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    perceived_effectiveness_six = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    perceived_effectiveness_seven = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    perceived_effectiveness_eight = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    perceived_effectiveness_nine = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    perceived_effectiveness_ten = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
 
     # CHOICE SATISFACTION
-    choice_satisfaction_one = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    choice_satisfaction_two = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    choice_satisfaction_three = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    choice_satisfaction_four = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    choice_satisfaction_five = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    choice_satisfaction_six = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    choice_satisfaction_seven = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    choice_satisfaction_eight = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    choice_satisfaction_nine = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    choice_satisfaction_one = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    choice_satisfaction_two = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    choice_satisfaction_three = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    choice_satisfaction_four = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    choice_satisfaction_five = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    choice_satisfaction_six = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    choice_satisfaction_seven = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    choice_satisfaction_eight = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    choice_satisfaction_nine = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
 
     # TEST AWARENESS
-    test_awareness_one = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    test_awareness_two = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    test_awareness_one = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    test_awareness_two = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
     
 class PostStudyGeneral(models.Model):
     """
@@ -289,18 +289,18 @@ class PostStudyGeneral(models.Model):
     submission_timestamp = models.DateTimeField()
 
     # intention to provide feedback
-    intention = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    intention = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
 
     # GENERAL TRUST IN TECH
-    trust_one = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    trust_two = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    trust_three = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    trust_four = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    trust_five = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    trust_one = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    trust_two = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    trust_three = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    trust_four = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    trust_five = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
 
     # MUSEUM ONLINE COLLECTION RELEVANT QUESTION
-    relevant_one = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    relevant_two = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    relevant_three = models.CharField(max_length = 30, choices = LIKERT_SCALE)
-    relevant_four = models.CharField(max_length = 30, choices = LIKERT_SCALE)
+    relevant_one = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    relevant_two = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    relevant_three = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
+    relevant_four = models.CharField(max_length = 30, choices = LIKERT_SCALE, default = 'neutral')
 

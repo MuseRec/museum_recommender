@@ -41,7 +41,12 @@ def _random_selector_conditions_and_order(name = 'condition'):
         else:
             result = rand.choices(settings.ORDER, weights = weights)
 
-    return result[0]
+    print('RESULT', result)
+
+    if isinstance(result, list):
+        return result[0]
+    
+    return result
 
 def get_condition():
     return _random_selector_conditions_and_order(name = 'condition')
