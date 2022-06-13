@@ -120,7 +120,8 @@ def handle_information_sheet_post(request):
             user = new_user, 
             condition = condition,
             order = order,
-            current_context = 'initial'
+            current_context = 'initial',
+            timestamp = timezone.now()
         )
 
         # now load the demographic survey

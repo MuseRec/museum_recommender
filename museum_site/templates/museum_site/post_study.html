@@ -1,6 +1,6 @@
 {% extends "museum_site/base.html" %}
 
-{% load crispy_forms_tags %}
+<!-- {% load crispy_forms_tags %} -->
 
 {% block content %} 
 
@@ -32,13 +32,17 @@
         <div class="row">
             <form action="{% url 'museum_site:post-study' part %}" method="post">
                 {% csrf_token %}
-                <!-- {{ post_study_form|crispy}} -->
                 {% for field in post_study_form %}
-                    <label for="{{ field.id_for_label }}">
-                        {{ field.choice_label }}
-                        <span class="radio">{{ field }}</span>
-                    </label>
-                {% endfor %}
+                    <div class="form-group">
+                        <label class="control-label" for="{{ field.name }}" style="padding: 0 15px;">{{ field.label|linebreaks }}</label>
+                        <br>
+                        <div style="margin-right: 0;">
+                            {% for f in field %}
+                                {{ f }}
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %} 
                 <input type="submit" value="Submit" class="btn btn-success" name="post_study_form">
                 <input type="hidden" value="{{ part }}" name="study_id">
             </form>

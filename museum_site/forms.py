@@ -4,6 +4,11 @@ from django.core.validators import EMPTY_VALUES
 from django import forms 
 
 from .models import PostStudy, PostStudyGeneral, User, UserDemographic, DomainKnowledge, DistractionTask
+from .models import LIKERT_SCALE
+
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Div
+from crispy_forms.bootstrap import InlineRadios
 
 class UserForm(ModelForm):
     def __init__(self, *args, **kwargs):
@@ -75,13 +80,16 @@ class DistractionTaskForm(ModelForm):
         fields = ('distraction',)
         labels = {'distraction': 'Which of the following animals is the lightest?'}
 
+class HorizontalRadioSelect(forms.RadioSelect):
+    template_name = 'horizontal_select.html'
 
 class PostStudyForm(ModelForm):
+
     def __init__(self, *args, **kwargs):
         super(PostStudyForm, self).__init__(*args, **kwargs)
         for key in self.fields:
-            self.fields[key].required = True 
-    
+            self.fields[key].required = True
+
     class Meta:
         model = PostStudy
         exclude = ('user', 'submission_timestamp', 'part')
@@ -121,11 +129,16 @@ class PostStudyForm(ModelForm):
         widgets = {
             question: forms.RadioSelect(
                 attrs = {
-                    'class': 'inline'
+                    'class': 'form-check-inline',
+                    'style': 'margin-right: 0; margin-left: 15px;'
                 }
             )
             for question, _ in labels.items()
         }
+
+        
+    
+
 
 class PostStudyGeneralForm(ModelForm):
     def __init__(self, *args, **kwargs):
@@ -151,7 +164,7 @@ class PostStudyGeneralForm(ModelForm):
         widgets = {
             question: forms.RadioSelect(
                 attrs = {
-                    'class': 'inline'
+                    'class': 'form-check-inline'
                 }
             )
             for question, _ in labels.items()

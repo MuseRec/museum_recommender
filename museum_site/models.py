@@ -189,6 +189,9 @@ class UserCondition(models.Model):
     # what context the user is currently in (either: initial, random, or model)
     current_context = models.CharField(max_length = 10)
 
+    # timestamp
+    timestamp = models.DateTimeField()
+
     def __str__(self) -> str:
         return f"{self.user}: {self.condition}, {self.order}"
 
