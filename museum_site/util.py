@@ -6,13 +6,6 @@ from django.db.models import Count
 from django.conf import settings
 from museum_site.models import UserCondition
 
-"""
-Get the last assignment (either condition or model)
-Remove the last assignment from the options (locally)
-Randomly select between the remaining option(s)
-
-"""
-
 
 def _random_selector_conditions_and_order(name = 'condition'):
     if name not in ['condition', 'order']:
