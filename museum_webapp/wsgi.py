@@ -12,6 +12,7 @@ import sys
 
 from django.core.wsgi import get_wsgi_application
 
+
 sys.path.append('/var/www/django/recommender/')
 sys.path.append('/var/www/django/recommender/museum_webapp/')
 
