@@ -1,0 +1,52 @@
+html body {
+    padding-top: 5rem;
+    /*background-color: #f6e8d5;*/
+    font-family: "Helvetica Neue",Helvetica,Arial,"Noto Sans SC","Noto Sans TC","Noto Sans JP","Noto Sans KR",sans-serif;
+    font-variant-ligatures: no-common-ligatures;
+    -moz-font-feature-settings: "liga" 0, "clig" 0;
+    -webkit-font-feature-settings: "liga" 0, "clig" 0;
+    font-feature-settings: "liga" 0, "clig" 0;
+}
+
+.signup-form {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.navbar-brand img {
+    height: 50px;
+    /* put value of image height as your need */
+    float: left;
+    margin-right: 7px;
+  }
+
+.search-bar {
+    text-align: center;
+    /*background-color: #4f301d;*/
+    padding: 25px 10px 10px 10px;
+}
+
+.search-bar-bottom {
+    text-align: center;
+    /*background-color: #4f301d;*/
+    padding: 0px 10px 10px 10px;
+    margin-top: 30px;
+    margin-bottom: 40px;
+}
+
+/* Foreground and background colour definitions for buttons at the search bar */
+:root {
+    --search-btn-foreground: #ffffff;
+    --search-btn-background: var(--gray-dark);
+    --text-artwork-color: #4f301d;
+    /* old colour definitions: brown: #724629, gray-dark: /*#212529 */
+}
+
+ul#post-study-question li {
+    display: inline-block
+}
+
+.radio {
+    display: inline-block;
+}
+

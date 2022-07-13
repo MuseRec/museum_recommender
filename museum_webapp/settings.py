@@ -13,6 +13,13 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 from pathlib import Path
 import os 
 
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/3.2/howto/static-files/
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 # TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
@@ -22,13 +29,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = 'l5il)#1h#d&_sbt+*svpu&6wkz$dz(gz93&)ew3l2u=tyjz*a-'
+#original:
+SECRET_KEY='l5il)#1h#d&_sbt+*svpu&6wkz$dz(gz93&)ew3l2u=tyjz*a-'
+#changed for production:
+#SECRET_KEY='k(s3*kurwx7abvgg7v6y1$gwbh-n9jl9fdcg3(+2lo)9^58@-$'
+
+
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG')
+#DEBUG = os.getenv('DEBUG')
+DEBUG = False
 
-ALLOWED_HOSTS = []
+
+ALLOWED_HOSTS = ['127.0.0.1','10.99.96.155']
 
 CONTEXT = os.environ.get('CONTEXT', default = 'user')
 
@@ -67,7 +81,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'crispy_forms'
+    'crispy_forms',
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -122,12 +136,15 @@ if os.getenv('TRAVIS', None):
         }
     }
 else:
+    SECRET_KEY = 'l5il)#1h#d&_sbt+*svpu&6wkz$dz(gz93&)ew3l2u=tyjz*a-'
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
             'NAME': 'museum_recsys_db',
-            'USER': os.getenv('DB_USER'),
-            'PASSWORD': os.getenv('DB_PW'),
+            #'USER': os.getenv('DB_USER'),
+            #'PASSWORD': os.getenv('DB_PW'),
+            'USER': 'museum_db_user',
+            'PASSWORD': '0qhzf}5Bf{ek',
             'HOST': '127.0.0.1',
             'PORT': '3306'
         }
