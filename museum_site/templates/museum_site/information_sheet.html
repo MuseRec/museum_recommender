@@ -12,6 +12,13 @@
                         <p><b>Please provide consent before progressing to the next step</b></p>
                     {% endif %}
                     <p>By providing consent, you allow data to collected on your interactions with the website.</p>
+
+                    <div class="text-center">
+                        <p>
+                            <a href="https://www.dropbox.com/s/e2qvaps9ou9jyeg/ui_public_pis_v1.0.pdf?dl=0" target="_blank" rel="noopener noreferrer" style="text-decoration:underline;">Participant Information Sheet</a>
+                        </p>
+                    </div>
+
                     <form method = "post">
                         {% csrf_token %}
                         {{ consent_form|crispy }}
