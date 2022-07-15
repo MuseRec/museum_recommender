@@ -40,7 +40,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = False
 
 
-ALLOWED_HOSTS = ['127.0.0.1','10.99.96.155']
+ALLOWED_HOSTS = ['127.0.0.1','10.99.96.155', '130.88..36.13', 'artdatastudy.its.manchester.ac.uk',]
 
 CONTEXT = os.environ.get('CONTEXT', default = 'user')
 
