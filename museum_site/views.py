@@ -264,9 +264,6 @@ def handle_render_home_page(request):
     user = User.objects.get(user_id = request.session['user_id'])
     user_condition = UserCondition.objects.get(user = user)
 
-    # flag to indicate whether or not to show the study instructions
-    show_instructions = False 
-
     if user_condition.current_context == 'initial':
         # get the artworks if they're stored in the cache
         artworks = cache.get('artworks')
@@ -283,8 +280,13 @@ def handle_render_home_page(request):
             # also store in the session what the current context is (to check later)
             cache.set('current_context', user_condition.current_context, timeout = None)
 
-        # set the flag to show the study instructions
-        show_instructions = True
+        # if show_instructions is not in the session context, then they've not seen it yet.
+        if 'show_instructions' not in request.session:
+            # set to true to trigger the instructions being shown
+            request.session['show_instructions'] = True 
+        else: # otherwise, it is and they have.
+            # set to false to prevent them bein shown again
+            request.session['show_instructions'] = False 
     elif user_condition.current_context == 'random':
         # we get the artwork query set in a random way - but should remain the same
         # when the page is refreshed
@@ -379,6 +381,16 @@ def handle_render_home_page(request):
         page_number = request.GET.get('page')
         artworks = paginator.get_page(page_number)
 
+    # if show_reminder is in the session, then set a flag to say they're about to see it 
+    # if that flag is there, then set the show reminder as false
+    if 'show_reminder' in request.session and 'reminder_seen' not in request.session:
+        # set a flag for when the page reloads on each artwork selection
+        request.session['reminder_seen'] = True 
+    elif 'show_reminder' in request.session and 'reminder_seen' in request.session:
+        # set it to false as they will have seen it if the condition above is met.
+        request.session['show_reminder'] = False
+
+
     context = {
         'provided_consent': True, 'page_id': 'index',
         'artworks': artworks,
@@ -386,7 +398,8 @@ def handle_render_home_page(request):
         'selection_context': user_condition.current_context,
         'selection_count': selected_artwork.count(),
         'already_selected': already_selected,
-        'show_instructions': show_instructions
+        'show_instructions': request.session.get('show_instructions', False),
+        'show_reminder': request.session.get('show_reminder', False)
     }
 
     return render(request, 'museum_site/index.html', context)
@@ -479,9 +492,7 @@ def transition_study_stage(request):
                 # otherwise, they're transitioning between part one and two or to part-two -> end
                 else: 
                     # if their current context is random and the first condition they should see
-                    # is random
-                    # print('current context', user_condition.current_context)
-                    # print('order', user_condition.order)
+                    # is random - this is basically 'PART 2'
                     if user_condition.current_context == 'random' and user_condition.order == 'random':
                         # then we need to update their current context to model and save it
                         user_condition.current_context = 'model'
@@ -507,14 +518,9 @@ def transition_study_stage(request):
                         return redirect('museum_site:index')
                     # otherwise, they're at the end of the study and the post-study questionnaires
                     # should be rendered
-                    else:
-                        print('they are in the endgame now!')
-                        print('request method', request.method)
+                    else: # this is the final part.
                         request.method = 'GET'
-                        # return handle_post_study(request)
                         return redirect('museum_site:post-study', which_form = 'part_one')
-
-                        # this is going to have to be another link, isn't it.
 
                     
 def handle_distraction_task(request):
@@ -529,6 +535,9 @@ def handle_distraction_task(request):
         new_submission.save()
 
         del request.session['distraction_task']
+
+        # add in the flag to bring up the 'reminder' of the instructions.
+        request.session['show_reminder'] = True
 
         return handle_render_home_page(request)
 
