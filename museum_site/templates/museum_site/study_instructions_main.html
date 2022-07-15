@@ -1,0 +1,64 @@
+{% if show_instructions %}
+    <div class="modal fade bd-example-modal-lg" id="instruction_modal" tabindex="-1" role="dialog" aria-labelledby="study_instruction_modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="instruction_modal_title">Study Instructions - Please read carefully</h5>
+                </div>
+                <div clas="modal-body">
+                    <div class="container-fluid">
+                        <br>
+                        <h6>Part 1</h6>
+                        <ol>
+                            <li>
+                                Once you have read this section and clicked on proceed, you will see a selection of 30 artworks.
+                                You can interact with them, e.g., through clicks, and have a browse. Out of these 30, please select 
+                                5 to 10 artworks that you would like to see more of. You can do so by clicking an artwork and hitting 
+                                the select button (or deselect shoud you wish to revoke one of your choices). Once you have chosen 5 to 
+                                10, you can click on the "Show me more" button in the top right corner of the page. 
+                            </li>
+                            <li>
+                                You will now get to see another set of artworks. Please look at them carefully and keep things in mind 
+                                that you might have noticed when comparing them to your first selection. You are again asked to select 
+                                5 to 10 artworks of which you would like to see more of.
+                            </li>
+                            <li>
+                                This process repeats for a number of rounds.
+                            </li>
+                        </ol>
+
+                        <hr>
+
+                        <h6>Part 2</h6>
+                        <p>
+                            This part follows the same procedure as Part 1. Please look at the artworks carefully and make mental notes 
+                            about any pecularities you might or might not notice.
+                        </p>
+
+                        <hr>
+
+                        <p>After Part 2, we kindly ask you fill in a post-study questionnaire.</p>
+                        <p>Thank you and enjoy the study, and the artworks of course!</p>
+
+                        <div class="alert alert-warning" role="alert">
+                            When browsing, please always use the "Go Back" button in the upper left corner of the study's website and 
+                            don't use your browsers back button. 
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-dismiss="modal">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        $(window).on('load', function() {
+            $('#instruction_modal').modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+        });
+    </script>
+{% endif %}

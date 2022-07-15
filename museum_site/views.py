@@ -264,7 +264,8 @@ def handle_render_home_page(request):
     user = User.objects.get(user_id = request.session['user_id'])
     user_condition = UserCondition.objects.get(user = user)
 
-    print(user_condition)
+    # flag to indicate whether or not to show the study instructions
+    show_instructions = False 
 
     if user_condition.current_context == 'initial':
         # get the artworks if they're stored in the cache
@@ -281,6 +282,9 @@ def handle_render_home_page(request):
 
             # also store in the session what the current context is (to check later)
             cache.set('current_context', user_condition.current_context, timeout = None)
+
+        # set the flag to show the study instructions
+        show_instructions = True
     elif user_condition.current_context == 'random':
         # we get the artwork query set in a random way - but should remain the same
         # when the page is refreshed
@@ -381,7 +385,8 @@ def handle_render_home_page(request):
         'study_context': settings.CONTEXT,
         'selection_context': user_condition.current_context,
         'selection_count': selected_artwork.count(),
-        'already_selected': already_selected
+        'already_selected': already_selected,
+        'show_instructions': show_instructions
     }
 
     return render(request, 'museum_site/index.html', context)
