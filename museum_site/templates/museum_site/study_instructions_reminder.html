@@ -1,0 +1,42 @@
+{% if show_reminder %}
+    <div class="modal fade" id="reminder_modal" tabindex="-1" role="dialog" aria-labelledby="study_reminder_modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reminder_modal_title">Just a little reminder</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <p>
+                            Part 2 works just like Part 1. Please select 5 to 10 artworks and click the "Show me more" button when 
+                            you are happy with your selection. Repeat the process until Part 2 automatically stops. You will then 
+                            be taken to a post-study questionnaire.
+                        </p>
+                        <p>
+                            Enjoy Part 2 and make mental notes if you notice anything in particular regarding the artworks shown
+                        </p>
+
+                        <hr>
+
+                        <div class="alert alert-warning" role="alert">
+                            When browsing, please always use the "Go Back" button in the upper left corner of the study's website 
+                            and don't use your browsers back button.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-dismiss="modal">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        $(window).on('load', function() {
+            $('#reminder_modal').modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+        });
+    </script>
+{% endif %}
