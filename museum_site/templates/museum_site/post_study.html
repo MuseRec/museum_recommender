@@ -34,7 +34,7 @@
                 {% csrf_token %}
                 {% for field in post_study_form %}
                     <div class="form-group">
-                        <label class="control-label" for="{{ field.name }}" style="padding: 0 15px;">{{ field.label|linebreaks }}</label>
+                        <label class="control-label" for="{{ field.name }}" style="padding: 0 15px; font-weight: bold;">{{ field.label|linebreaks }}</label>
                         <br>
                         <div style="margin-right: 0;">
                             {% for f in field %}
