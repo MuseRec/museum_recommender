@@ -15,6 +15,7 @@ from django.core.cache import cache
 import uuid
 import operator
 import json
+from itertools import chain 
 
 from .forms import DistractionTaskForm, UserForm, UserDemographicForm, DomainKnowledgeForm
 from .forms import SelectedArtworkForm, StudyTransitionForm, PostStudyForm, PostStudyGeneralForm
@@ -121,6 +122,7 @@ def handle_information_sheet_post(request):
             condition = condition,
             order = order,
             current_context = 'initial',
+            current_step = 1,
             timestamp = timezone.now()
         )
 
@@ -220,11 +222,35 @@ def artwork(request, artwork_id):
         timestamp=timezone.now()
     )
 
+    if request.session.get('reset_current_step_count'):
+        selection_count = 0 
+        request.session['reset_current_step_count'] = False
+    else:
+        selected_artwork = ArtworkSelected.objects.filter(
+            user = user, selection_context = user_condition.current_context
+        )
+        selection_count = selected_artwork.count()
     # get the artwork that the user has selected
-    selected_artwork = ArtworkSelected.objects.filter(
-        user = user, selection_context = user_condition.current_context
-    )
-    print('selected artwork', selected_artwork.count())
+    # if cache.get('current_step'):
+    #     selected_artwork = ArtworkSelected.objects.filter(
+    #         user = user, selection_context = user_condition.current_context, 
+    #         current_step = cache.get('current_step')
+    #     )
+    # else:
+    # selected_artwork = ArtworkSelected.objects.filter(
+    #     user = user, selection_context = user_condition.current_context
+    # )
+    # print('selected artwork', selected_artwork.count())
+    if cache.get('current_step'):
+        selected_artwork = ArtworkSelected.objects.filter(
+            user = user, selection_context = user_condition.current_context, 
+            step_selected = cache.get('current_step')
+        )
+    else:
+        selected_artwork = ArtworkSelected.objects.filter(
+            user = user, selection_context = user_condition.current_context
+        )
+
 
     # get the artworks that the user has already selected (to grey out the button)
     already_selected = {art.selected_artwork.art_id for art in selected_artwork}
@@ -272,7 +298,6 @@ def handle_render_home_page(request):
         if artworks is None:
             # get the artworks that are in the initial set and randomise
             artworks = Artwork.objects.filter(art_id__in = settings.INITIAL_ARTWORKS).order_by('?')
-            print(artworks)
 
             # store them in the cache, without a timeout.
             cache.set('artworks', artworks, timeout = None)
@@ -290,7 +315,7 @@ def handle_render_home_page(request):
     elif user_condition.current_context == 'random':
         # we get the artwork query set in a random way - but should remain the same
         # when the page is refreshed
-        
+
         # get the artworks and current context
         artworks = cache.get('artworks')
         cached_current_context = cache.get('current_context')
@@ -311,6 +336,57 @@ def handle_render_home_page(request):
             # update the artwork and current context in the cache
             cache.set('artworks', artworks, timeout = None)
             cache.set('current_context', 'random', timeout = None)
+            
+            # add the current step into the cache to keep track
+            cache.set('current_step', 1, timeout = None)
+
+        print('CURRENT STEP', user_condition.current_step)
+
+        # if these aren't equal, then it means that hte user has moved along into another step 
+        if cache.get('current_step') != user_condition.current_step:
+            # get all the artworks that hte user has selected for this condition
+            selected_artworks = {
+                selected_art.selected_artwork.art_id
+                for selected_art in ArtworkSelected.objects.filter(
+                    user = user, selection_context = 'random'
+                )
+            }
+
+            print('selected', selected_artworks)
+
+            # record how many artworks there are pre-filtering
+            pre_filter_length = len(artworks)
+
+            # filter those out that have been previously selected
+            artworks_filtered = [
+                art for art in artworks 
+                if art.art_id not in selected_artworks
+            ]
+
+            print('filtered', [a.art_id for a in artworks_filtered])
+
+            # replace those that have been removed with other artworks
+            number_to_replace = pre_filter_length - len(artworks_filtered)
+
+            print('number to replace', number_to_replace)
+
+            # get the new set of artworks
+            new_set = Artwork.objects.exclude( # we don't want those already selected
+                art_id__in = selected_artworks
+            ).exclude( # nor those we already have
+                art_id__in = [a.art_id for a in artworks_filtered]
+            ).order_by('?')[:number_to_replace] # randomise and get the number we want
+
+            print('new set', [n.art_id for n in new_set])
+
+            # bring the two sets together 
+            artworks = list(chain(artworks_filtered, new_set))
+
+            print('artworks', artworks)
+
+            # update the cache
+            cache.set('artworks', artworks, timeout = None)
+            cache.set('current_step', cache.get('current_step') + 1, timeout = None)
     else:
         assert user_condition.current_context == 'model'
 
@@ -368,14 +444,29 @@ def handle_render_home_page(request):
         else:
             art.artist = 'unknown artist'
 
-    selected_artwork = ArtworkSelected.objects.filter(
-        user = user, selection_context = user_condition.current_context
-    )
+    
+    # selected_artwork = ArtworkSelected.objects.filter(
+    #     user = user, selection_context = user_condition.current_context
+    # )
+    # selection_count = 0 if reset_current_step_count else selected_artwork.count()
+
+    if cache.get('current_step'):
+        print('current step', cache.get('current_step'))
+        selected_artwork = ArtworkSelected.objects.filter(
+            user = user, selection_context = user_condition.current_context, 
+            step_selected = cache.get('current_step')
+        )
+        print('number of selected artworks', selected_artwork.count())
+    else:
+        print('not in a step')
+        selected_artwork = ArtworkSelected.objects.filter(
+            user = user, selection_context = user_condition.current_context
+        )
 
     # get the artworks that the user has already selected (to grey out)
     already_selected = {art.selected_artwork.art_id for art in selected_artwork}
     
-    
+
     if settings.CONTEXT == 'focus':
         paginator = Paginator(artworks, 30)
         page_number = request.GET.get('page')
@@ -415,9 +506,12 @@ def selected_artwork(request):
             timestamp = timezone.now()
 
             if form.cleaned_data['selection_button'] == 'Select':
+                current_step = -1 if not cache.get('current_step') else cache.get('current_step')
+
                 # get the number of artworks that the user has already selected
                 number_selected = ArtworkSelected.objects.filter(
-                    user = user, selection_context = user_condition.current_context
+                    user = user, selection_context = user_condition.current_context, 
+                    step_selected = cache.get('current_step')
                 ).count()
 
                 # if the number of selected artworks is greater than the upper bound
@@ -425,11 +519,14 @@ def selected_artwork(request):
                     request.session['too_many_selected'] = True
                     return redirect('museum_site:artwork', artwork_id = artwork.art_id)
 
+                current_step = cache.get('current_step')
+
                 # save that the user has selected the artwork
                 ArtworkSelected.objects.create(
                     user = user, 
                     selected_artwork = artwork,
                     selection_context = user_condition.current_context, 
+                    step_selected = -1 if not cache.get('current_step') else cache.get('current_step'),
                     timestamp = timestamp
                 )
 
@@ -468,59 +565,68 @@ def transition_study_stage(request):
             user = User.objects.get(user_id = request.session['user_id'])
             user_condition = UserCondition.objects.get(user = user)
             selection_count = ArtworkSelected.objects.filter(
-                user = user, selection_context = user_condition.current_context
+                user = user, selection_context = user_condition.current_context, 
+                step_selected = -1 if not cache.get('current_step') else cache.get('current_step')
             ).count()
 
             # print('current user condition:', user_condition.current_context)
 
             # if the number of artworks selected is between the lower and upper bound
-            if settings.SELECTION_LOWER_BOUND <= selection_count <= settings.SELECTION_UPPER_BOUND:
+            within_bounds = settings.SELECTION_LOWER_BOUND <= selection_count <= settings.SELECTION_UPPER_BOUND
+
+            # if the number of artworks selected is between the lower and upper bound
+            if (within_bounds and user_condition.current_context == 'initial'):
                 # and if the user is current in the initial context (just starting the study)
-                if user_condition.current_context == 'initial':
-                    # then we need to set their current context based on the first condition
-                    # the user should see (either random or model)
-                    if user_condition.order == 'random':
-                        user_condition.current_context = 'random'
-                    else:
-                        user_condition.current_context = 'model'
-                    user_condition.save() # update the user condition record in the DB
+                # if user_condition.current_context == 'initial':
+                # then we need to set their current context based on the first condition
+                # the user should see (either random or model)
+                if user_condition.order == 'random':
+                    user_condition.current_context = 'random'
+                else:
+                    user_condition.current_context = 'model'
+                user_condition.save() # update the user condition record in the DB
 
-                    # print('updated user condition to:', user_condition.current_context)
-                    # redirect to the index; the updated user condition will change the 
-                    # artworks that the user sees.
+                # redirect to the index; the updated user condition will change the 
+                # artworks that the user sees.
+                return redirect('museum_site:index')
+                # otherwise, they're transitioning between part one and two or to part-two -> end 
+            elif (within_bounds and user_condition.current_step == settings.NUMBER_OF_STEPS):
+                if user_condition.current_context == 'random' and user_condition.order == 'random':
+                    # we need to update their current context to 'model', reset their
+                    # current step to 1, and save it
+                    user_condition.current_context = 'model'
+                    user_condition.current_step = 1
+                    user_condition.save()
+
+                    print('updated context to', user_condition.current_context)
+
+                    request.session['distraction_task'] = True
+
+                    # redirect to the index
                     return redirect('museum_site:index')
-                # otherwise, they're transitioning between part one and two or to part-two -> end
-                else: 
-                    # if their current context is random and the first condition they should see
-                    # is random - this is basically 'PART 2'
-                    if user_condition.current_context == 'random' and user_condition.order == 'random':
-                        # then we need to update their current context to model and save it
-                        user_condition.current_context = 'model'
-                        user_condition.save()
+                # if their context is model and first condition is model
+                elif user_condition.current_context == 'model' and user_condition.order == 'model':
+                    # we need to update their current context to 'random', reset their
+                    # current step to 1, and save it
+                    user_condition.current_context = 'random'
+                    user_condition.current_step = 1
+                    user_condition.save()
 
-                        print('updated context to', user_condition.current_context)
+                    request.session['distraction_task'] = True
 
-                        request.session['distraction_task'] = True
-
-                        # redirect to the index
-                        return redirect('museum_site:index')
-                    # if their context is model and first condition is model
-                    elif user_condition.current_context == 'model' and user_condition.order == 'model':
-                        # then they should see the random condition, so update and save
-                        user_condition.current_context = 'random'
-                        user_condition.save()
-
-                        # print('updated context to', user_condition.current_context)
-
-                        request.session['distraction_task'] = True
-
-                        # redirect to the index
-                        return redirect('museum_site:index')
-                    # otherwise, they're at the end of the study and the post-study questionnaires
-                    # should be rendered
-                    else: # this is the final part.
-                        request.method = 'GET'
-                        return redirect('museum_site:post-study', which_form = 'part_one')
+                    # redirect to the index
+                    return redirect('museum_site:index')
+                # otherwise, they're at the end of the study and the post-study questionnaires
+                # should be rendered
+                else: # this is the final part.
+                    request.method = 'GET'
+                    return redirect('museum_site:post-study', which_form = 'part_one')
+            elif within_bounds:
+                # state remains the same
+                # update the number of steps (+1)
+                user_condition.current_step = user_condition.current_step + 1
+                user_condition.save()
+                return redirect('museum_site:index')
 
                     
 def handle_distraction_task(request):

@@ -2,10 +2,10 @@ from django.test import TestCase
 from django.test.utils import tag
 from django.urls import reverse
 from django.utils import timezone
+from django.conf import settings
 
-from museum_site.models import User, UserDemographic
-from museum_site.models import Artwork, ArtworkVisited
-from museum_site.models import UserCondition
+from museum_site.models import User, UserDemographic, UserCondition
+from museum_site.models import Artwork, ArtworkVisited, ArtworkSelected
 from museum_site.views import get_condition
 from collector.views import log
 
@@ -128,63 +128,20 @@ class HandleRenderHomePageTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.user = User.objects.latest('user_created')
 
-        # create artwork that can be passed to the front end
-        self.artworks = [
-            Artwork.objects.create(
-                art_id="abcdef123456",
-                collection="Collection 1",
-                classification="Classification 1",
-                title="Title 1",
-                medium="Medium 1",
-                artist='["Aaaa Bbbb"]',
-                birth_date='["1880"]',
-                death_date='["1950"]',
-                earliest_date=1900,
-                latest_date=1920,
-                image_credit="Institution 1",
-                linked_terms="['Term11', 'Term12', 'Term13']",
-                linked_topics=['Topic11', 'Topic12', 'Topic13'],
-                linked_art_terms="First group of trt terms",
-                img_file="image_file_1.jpg",
-                img_location="AAA/BBB/image_file_1.jpg",
-            ),
-            Artwork.objects.create(
-                art_id="bcdefg234567",
-                collection="Collection 2",
-                classification="Classification 2",
-                title="Title 2",
-                medium="Medium 2",
-                artist='["Aaaa Bbbb", "Cccc Dddd", "Eeee Ffff"]',
-                birth_date='["1581", "1582", "1583", "1584"]',
-                death_date='["1650", "1651", "1652", "1653"]',
-                earliest_date=1600,
-                latest_date=1620,
-                image_credit="Institution 2",
-                linked_terms="['Term21', 'Term22', 'Term23']",
-                linked_topics=['Topic21', 'Topic22', 'Topic23'],
-                linked_art_terms="Second group of trt terms",
-                img_file="image_file_2.jpg",
-                img_location="AAA/CCC/image_file_2.jpg",
-            ),
-            Artwork.objects.create(
-                art_id="cdefgh345678",
-                collection="Collection 3",
-                classification="Classification 3",
-                title="Title 3",
-                medium="Medium 3",
-                artist='["Eeee Ffff"]',
-                birth_date='["1980"]',
-                death_date=None,
-                earliest_date=2000,
-                latest_date=None,
-                image_credit="Institution 3",
-                linked_terms="['Term31', 'Term32', 'Term33']",
-                linked_topics=['Topic31', 'Topic32', 'Topic33'],
-                linked_art_terms="Third group of art terms",
-                img_file="image_file_3.jpg",
-                img_location="BBB/DDD/image_file_3.jpg",
-            ),
-        ]
+        self.artworks = []
+        for art in settings.INITIAL_ARTWORKS:
+            self.artworks.append(Artwork.objects.create(
+                art_id = art, collection = 'collection x', 
+                classification = 'classification x', title = 'title', 
+                medium = 'medium', artist = '["artist"]', 
+                birth_date = '["1880"]', death_date = '["1950"]', 
+                earliest_date = 1900, latest_date = 1920, 
+                image_credit = 'institution', linked_terms = "['term 1', 'term 2', 'term 3']", 
+                linked_topics = ['topic 1', 'topic 2', 'topic 3'], 
+                linked_art_terms = 'group of terms', 
+                img_file = 'image_file.jpg', 
+                img_location = 'images/image_file.jpg'
+            ))
 
     def test_artworks_are_returned(self):
         response = self.client.get(reverse('museum_site:index'))
@@ -196,11 +153,42 @@ class HandleRenderHomePageTest(TestCase):
         self.assertTrue(response.context['provided_consent'])
 
         # there should be three artworks in the response
-        self.assertEqual(len(response.context['page_obj']), 3)
+        self.assertEqual(len(response.context['artworks']), 20)
 
         # and each of those should equal the ones we've created previously.
         for art in self.artworks:
-            self.assertTrue(art in response.context['page_obj'])
+            self.assertTrue(art in response.context['artworks'])
+
+    def test_random_context(self):
+        # change the current context of the user to random
+        user_condition = UserCondition.objects.get(user = self.user)
+        user_condition.current_context = 'random'
+        user_condition.save()
+
+        # make the request (adds things to the cache etc)
+        response = self.client.get(reverse('museum_site:index'))
+
+        # select a few of the images
+        for art in self.artworks[:3]:
+            response_post = self.client.post(reverse('museum_site:selected'), data = {
+                'artwork_id': art.art_id,
+                'selection_button': ['Select']
+            })
+            self.assertEqual(response_post.status_code, 302)
+
+        # update the user condition current step
+        user_condition.current_step = user_condition.current_step + 1
+        user_condition.save()
+
+        # test that those selected have been removed
+        response = self.client.get(reverse('museum_site:index'))
+
+        artwork_response = response.context['artworks']
+
+        self.assertNotIn(
+            [art.art_id for art in self.artworks[:3]],
+            [art.art_id for art in artwork_response]
+        )
 
 
 class ArtworkTest(TestCase):

@@ -66,9 +66,9 @@ if CONTEXT == 'user':
         'ACC_ACC_ACC1_1947-001', 'HSW_DMAG_1976_94-001', 'ACC_ACC_AC_5490-001',
         'NOT_NSDC_36_70-001', 'ACC_ACC_AC_1370-001', 'NG_NG_NG1079-001',
     ]
+    NUMBER_OF_STEPS = 5
 
 # Application definition
-
 INSTALLED_APPS = [
     'museum_site.apps.MuseumSiteConfig',
     'collector.apps.CollectorConfig',
@@ -150,7 +150,6 @@ else:
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',

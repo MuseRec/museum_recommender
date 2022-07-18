@@ -1,6 +1,7 @@
 from distutils.errors import LinkError
 from django.db import models
 
+
 AGE_CHOICES = [
     ('18-20', '18-20'), ('21-29', '21-29'), ('30-39', '30-39'), ('40-49', '40-49'),
     ('50-59', '50-59'), ('60+', '60+') 
@@ -189,6 +190,10 @@ class UserCondition(models.Model):
     # what context the user is currently in (either: initial, random, or model)
     current_context = models.CharField(max_length = 10)
 
+    # what 'step' within a part a user is currently in, i.e., are they in position 3
+    # out of 5? Set the default to 1
+    current_step = models.IntegerField(default = 1)
+
     # timestamp
     timestamp = models.DateTimeField()
 
@@ -208,8 +213,14 @@ class ArtworkSelected(models.Model):
     # what the context of the selection is (either initial; random; or model)
     selection_context = models.CharField(max_length = 10)
 
+    # log what step the artwork was selected on
+    step_selected = models.IntegerField(default = -1)
+
     # the timestamp for when the selection occurred (probably the same across the selected five)
     timestamp = models.DateTimeField()
+
+    def __str__(self) -> str:
+        return f"{self.user}: {self.selected_artwork}, {self.selection_context}"
 
 class RecommendedArtwork(models.Model):
     """
