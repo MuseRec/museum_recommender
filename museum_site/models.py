@@ -234,6 +234,9 @@ class RecommendedArtwork(models.Model):
     # the context, i.e., random or model-based (+ model type)
     recommendation_context = models.CharField(max_length = 30)
 
+    # the step at which they were recommended
+    recommended_step = models.IntegerField(default = 1)
+
 class DistractionTask(models.Model):
     """
     """

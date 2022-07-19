@@ -277,16 +277,36 @@ def artwork(request, artwork_id):
 
     return render(request, "museum_site/artwork.html", context)
 
+def step_filtering(artworks, user, selection_context):
+    # get all the artworks that the user has selected for this condition
+    if selection_context == 'random':
+        selected_artworks = {
+            selected_art.selected_artwork.art_id 
+            for selected_art in ArtworkSelected.objects.filter(
+                user = user, selection_context = selection_context
+            )
+        }
+    else:
+        selected_artworks = { 
+            selected_art.selected_artwork 
+            for selected_art in ArtworkSelected.objects.filter(
+                user = user, selection_context = selection_context
+            )
+        }
+
+    # record how many artworks there are pre-filtering
+    pre_filter_length = len(artworks)
+
+    # filter those out that have been previously selected
+    artworks_filtered = [
+        art for art in artworks 
+        if art.art_id not in selected_artworks
+    ]
+
+    return selected_artworks, pre_filter_length, artworks_filtered
+
 
 def handle_render_home_page(request):
-    # THIS IS WHERE WE LAND ONCE THE USER HAS DONE ALL OF THE 
-    # INITIAL QUESTIONAIRES. 
-    # WE NEED TO SEND BACK EITHER THE RANDOM OR MODEL-BASED IMAGES.
-
-    # initially, a set of 20 artworks should be shown to the user at random (the same to all users).
-    # 
-    # the user then selects five, and based on these, they are shown another 15 (random or recs)
-
     user = User.objects.get(user_id = request.session['user_id'])
     user_condition = UserCondition.objects.get(user = user)
 
@@ -344,47 +364,33 @@ def handle_render_home_page(request):
 
         # if these aren't equal, then it means that hte user has moved along into another step 
         if cache.get('current_step') != user_condition.current_step:
-            # get all the artworks that hte user has selected for this condition
-            selected_artworks = {
-                selected_art.selected_artwork.art_id
-                for selected_art in ArtworkSelected.objects.filter(
-                    user = user, selection_context = 'random'
+            # get the selected artworks from the 'initial' step
+            selected_artworks_initial = [
+                s_a.selected_artwork.art_id 
+                for s_a in ArtworkSelected.objects.filter(
+                    user = user, selection_context = 'initial'
                 )
-            }
-
-            print('selected', selected_artworks)
-
-            # record how many artworks there are pre-filtering
-            pre_filter_length = len(artworks)
-
-            # filter those out that have been previously selected
-            artworks_filtered = [
-                art for art in artworks 
-                if art.art_id not in selected_artworks
             ]
 
-            print('filtered', [a.art_id for a in artworks_filtered])
+            # get the artworks that the user has selected in this condition 
+            selected_artworks_condition = [
+                s_a.selected_artwork.art_id 
+                for s_a in ArtworkSelected.objects.filter(
+                    user = user, selection_context = 'random'
+                )
+            ]
 
-            # replace those that have been removed with other artworks
-            number_to_replace = pre_filter_length - len(artworks_filtered)
+            # fetching the new set of artworks
+            # 1) exclude those that the user selected in the initial step 
+            # 2) exclude those that the has selected as part of this condition
+            # 3) randomly order and take the top 30
+            artworks = Artwork.objects.exclude(
+                art_id__in = selected_artworks_initial
+            ).exclude(
+                art_id__in = selected_artworks_condition
+            ).order_by('?')[:30]
 
-            print('number to replace', number_to_replace)
-
-            # get the new set of artworks
-            new_set = Artwork.objects.exclude( # we don't want those already selected
-                art_id__in = selected_artworks
-            ).exclude( # nor those we already have
-                art_id__in = [a.art_id for a in artworks_filtered]
-            ).order_by('?')[:number_to_replace] # randomise and get the number we want
-
-            print('new set', [n.art_id for n in new_set])
-
-            # bring the two sets together 
-            artworks = list(chain(artworks_filtered, new_set))
-
-            print('artworks', artworks)
-
-            # update the cache
+            # update the cache 
             cache.set('artworks', artworks, timeout = None)
             cache.set('current_step', cache.get('current_step') + 1, timeout = None)
     else:
@@ -422,12 +428,64 @@ def handle_render_home_page(request):
                 RecommendedArtwork.objects.create(
                     user = user, 
                     recommended_artwork = art_work, 
-                    recommendation_context = 'random'
+                    recommendation_context = 'model',
+                    recommended_step = 1
                 )
             
             # update the artwork and current context in the cache
             cache.set('artworks', artworks, timeout = None)
             cache.set('current_context', 'model', timeout = None)
+
+            # add the current step into the cache to keep track
+            cache.set('current_step', 1, timeout = None)
+
+        if cache.get('current_step') != user_condition.current_step:
+            # get the selected artworks from the 'initial' step
+            selected_artworks_initial = [
+                s_a.selected_artwork
+                for s_a in ArtworkSelected.objects.filter(
+                    user = user, selection_context = 'initial'
+                )
+            ]
+
+            # get the artworks that the user has selected in this condition
+            selected_artworks_condition = [
+                s_a.selected_artwork 
+                for s_a in ArtworkSelected.objects.filter(
+                    user = user, selection_context = 'model'
+                )
+            ]
+
+            print('selected artworks', [s_a.title for s_a in selected_artworks_condition])
+
+            # get the model condition that the user should be seeing (meta, image, or concat)
+            model_condition = DataRepresentation.objects.get(source = user_condition.condition)
+
+            # the recommendation part
+            # 1) get the similar artworks based on those selected and the representation
+            # 2) exclude those that the user has selected as part of the this condition 
+            # 3) order by the score (descending), and take the top 30
+            artworks = Similarities.objects.filter(
+                representation = model_condition, art__in = selected_artworks_initial
+            ).exclude(
+                similar_art__in = selected_artworks_condition
+            ).order_by('-score')[:30]
+
+            # get the artworks themselves
+            artworks = [s_a.similar_art for s_a in artworks]
+
+            # save the artworks, with the user, condition, and step in the database
+            for art in artworks:
+                RecommendedArtwork.objects.create(
+                    user = user, 
+                    recommended_artwork = art, 
+                    recommendation_context = 'model',
+                    recommended_step = cache.get('current_step') + 1
+                )
+
+            # update the cache
+            cache.set('artworks', artworks, timeout = None)
+            cache.set('current_step', cache.get('current_step') + 1, timeout = None)
  
     # convert the artist list
     for art in artworks:
@@ -443,12 +501,6 @@ def handle_render_home_page(request):
                 art.artist = artist_list[0]
         else:
             art.artist = 'unknown artist'
-
-    
-    # selected_artwork = ArtworkSelected.objects.filter(
-    #     user = user, selection_context = user_condition.current_context
-    # )
-    # selection_count = 0 if reset_current_step_count else selected_artwork.count()
 
     if cache.get('current_step'):
         print('current step', cache.get('current_step'))
@@ -688,19 +740,22 @@ def post_study(request, which_form):
             print('which form == general')
             return render(request, 'museum_site/post_study.html', {
                 'post_study_form': PostStudyGeneralForm(),
-                'part': 'general'    
+                'part': 'general',
+                'provided_consent': True    
             })
         elif which_form == 'part_two':
             print('which form == part_two')
             return render(request, 'museum_site/post_study.html', {
                 'post_study_form': PostStudyForm(), 
-                'part': 'part_two'
+                'part': 'part_two',
+                'provided_consent': True 
             })
         else:
             print('which form == part_one')
             return render(request, 'museum_site/post_study.html', {
                 'post_study_form': PostStudyForm(), 
-                'part': 'part_one'
+                'part': 'part_one', 
+                'provided_consent': True
             })
 
 def thank_you(request):

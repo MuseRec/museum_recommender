@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.test.utils import tag
 from django.urls import reverse
 from django.utils import timezone
@@ -8,6 +8,7 @@ from museum_site.models import User, UserDemographic, UserCondition
 from museum_site.models import Artwork, ArtworkVisited, ArtworkSelected
 from museum_site.views import get_condition
 from collector.views import log
+from recommendations.models import DataRepresentation, Similarities
 
 
 class IndexGetTest(TestCase):
@@ -128,8 +129,13 @@ class HandleRenderHomePageTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.user = User.objects.latest('user_created')
 
+        # change user condition to image
+        uc = UserCondition.objects.get(user = self.user)
+        uc.condition = 'image'
+        uc.save()
+
         self.artworks = []
-        for art in settings.INITIAL_ARTWORKS:
+        for art in settings.INITIAL_ARTWORKS[:5]:
             self.artworks.append(Artwork.objects.create(
                 art_id = art, collection = 'collection x', 
                 classification = 'classification x', title = 'title', 
@@ -142,6 +148,30 @@ class HandleRenderHomePageTest(TestCase):
                 img_file = 'image_file.jpg', 
                 img_location = 'images/image_file.jpg'
             ))
+
+        # create a fake data representation
+        for representation in ['meta', 'image', 'concatenated']:
+            DataRepresentation.objects.create(source = representation)
+        self.representation = DataRepresentation.objects.get(source = 'image')
+
+        # create some fake similarities
+        fake_similarities = [
+            (self.artworks[0], self.artworks[1]), # 0.8
+            (self.artworks[0], self.artworks[2]), # 0.75
+            (self.artworks[1], self.artworks[2]), # 0.5 
+            (self.artworks[1], self.artworks[3]), # 1.0
+            (self.artworks[4], self.artworks[0]) # 0.6
+        ]
+        scores = [0.8, 0.75, 0.5, 1.0, 0.6]
+        self.sims = []
+        for idx, (art_one, art_two) in enumerate(fake_similarities):
+            sim = Similarities.objects.create(
+                art = art_one, similar_art = art_two, 
+                representation = self.representation, 
+                score = scores[idx]
+            )
+            self.sims.append(sim)
+        
 
     def test_artworks_are_returned(self):
         response = self.client.get(reverse('museum_site:index'))
@@ -189,6 +219,39 @@ class HandleRenderHomePageTest(TestCase):
             [art.art_id for art in self.artworks[:3]],
             [art.art_id for art in artwork_response]
         )
+
+    @override_settings(CACHES = {'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
+    def test_model_context(self):
+        # change the current context of the user to model
+        user_condition = UserCondition.objects.get(user = self.user)
+        user_condition.current_context = 'model'
+        user_condition.save()
+
+        # make the request (adds things to the cache etc)
+        response = self.client.get(reverse('museum_site:index'))
+        print('response artworks', response.context['artworks'])
+
+        
+        # select the first artwork
+        response_post = self.client.post(reverse('museum_site:selected'), data = {
+            'artwork_id': self.artworks[0].art_id,
+            'selection_button': ['Select']
+        })
+        self.assertEqual(response_post.status_code, 302)
+
+        print('number of artworks', len(Artwork.objects.all()))
+        print(ArtworkSelected.objects.all())
+        print('Similarities', Similarities.objects.all())
+        
+        # update the user condition current step
+        user_condition.current_step = user_condition.current_step + 1
+        user_condition.save()
+
+        # test that those selected have been removed
+        response = self.client.get(reverse('museum_site:index'))
+
+        print(response.context['artworks'])
+
 
 
 class ArtworkTest(TestCase):
