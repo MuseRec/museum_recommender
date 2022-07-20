@@ -38,10 +38,10 @@
                                     <a href = "{% url 'museum_site:artwork' art.art_id %}"
                                         onclick = "return interaction_event('click', '{{ art.art_id }}', '{{ page_id }}', '{{ csrf_token }}');">
                                         {% if art.art_id in already_selected %}
-                                            <img class = 'card-img-top' style="width: 150px; height: 180px; background-size: 300% 300%; opacity: 0.25;" src = "{% static 'img/images/' %}{{ art.img_file }}"
+                                            <img class = 'card-img-top' style="width: 160px; height: 155px; background-size: auto; opacity: 0.45;" src = "{% static 'img/images/' %}{{ art.img_file }}"
                                                 alt = '{{ art.title|cut:"'" }}' />
                                         {% else %}
-                                            <img class = 'card-img-top' style="width: 150px; height: 180px; background-size: 300% 300%;" src = "{% static 'img/images/' %}{{ art.img_file }}"
+                                            <img class = 'card-img-top' style="width: 160px; height: 155px; background-size: auto;" src = "{% static 'img/images/' %}{{ art.img_file }}"
                                                 alt = '{{ art.title|cut:"'" }}' />
                                         {% endif %}
                                     </a>
