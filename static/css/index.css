@@ -1,6 +1,8 @@
 .artwork-img-style {
-    width: 130px;
-    height: 125px;
+    /* width: 130px; */
+    /* height: 125px; */
+    width: 160px;
+    height: 155px;
     overflow: hidden;
     justify-content: center;
     display: flex;
