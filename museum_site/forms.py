@@ -2,6 +2,7 @@ from distutils.archive_util import make_archive
 from django.forms import ModelForm, HiddenInput
 from django.core.validators import EMPTY_VALUES
 from django import forms 
+from django.core.exceptions import ValidationError
 
 from .models import PostStudy, PostStudyGeneral, User, UserDemographic, DomainKnowledge, DistractionTask
 from .models import LIKERT_SCALE
