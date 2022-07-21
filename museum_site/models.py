@@ -30,7 +30,7 @@ WORK_CHOICES = [
 # ]
 
 DISABILITY = [
-    ('disable', 'Identify as disabled'), ('not disabled', 'Do not identify as disable'),
+    ('disabled', 'Identify as disabled'), ('not disabled', 'Do not identify as disabled'),
     ('no answer', 'Prefer not to answer')
 ]
 
