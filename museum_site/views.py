@@ -266,8 +266,7 @@ def artwork(request, artwork_id):
         'selection_count': selected_artwork.count(),
         'already_selected': already_selected,
         'too_many_selected': request.session.get('too_many_selected', False),
-        'is_artwork_page': True,
-        'selection_lower_bound': settings.SELECTION_LOWER_BOUND
+        'is_artwork_page': True
     }
 
     # fetch the top 5 most similar artworks to this one, if the context is the focus group
