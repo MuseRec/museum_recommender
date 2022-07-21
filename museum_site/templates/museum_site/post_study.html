@@ -36,11 +36,13 @@
                     <div class="form-group">
                         <label class="control-label" for="{{ field.name }}" style="padding: 0 15px; font-weight: bold;">{{ field.label|linebreaks }}</label>
                         <br>
-                        <div style="margin-right: 0;">
-                            {% for f in field %}
+                        
+                        {% for f in field %}
+                            <!-- <div style="margin-right: 0;"> -->
                                 {{ f }}
-                            {% endfor %}
-                        </div>
+                            <!-- </div> -->
+                        {% endfor %}
+                        
                     </div>
                 {% endfor %} 
                 <input type="submit" value="Submit" class="btn btn-success" name="post_study_form">
