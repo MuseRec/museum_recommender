@@ -64,7 +64,7 @@
                 {% if study_context == 'user' and selection_count %}
                     <div class='mr-sm-4'>
                         <h6 class='mr-sm-2' style='color:white;'>Selected Artworks: {{ selection_count }}</h6>
-                        {% if selection_count >= 5 %}
+                        {% if selection_count >= selection_lower_bound %}
                             <form action='/transition/' method='post'>
                                 {% csrf_token %}
                                 <input type='submit' class='btn btn-success' value='Show me more' name='move_on_button'>

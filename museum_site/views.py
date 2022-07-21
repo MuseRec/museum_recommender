@@ -241,10 +241,12 @@ def artwork(request, artwork_id):
     #     user = user, selection_context = user_condition.current_context
     # )
     # print('selected artwork', selected_artwork.count())
-    if cache.get('current_step'):
+    # if cache.get('current_step'):
+    if request.session.get('current_step'):
         selected_artwork = ArtworkSelected.objects.filter(
             user = user, selection_context = user_condition.current_context, 
-            step_selected = cache.get('current_step')
+            # step_selected = cache.get('current_step')
+            step_selected = request.session.get('current_step')
         )
     else:
         selected_artwork = ArtworkSelected.objects.filter(
@@ -264,7 +266,8 @@ def artwork(request, artwork_id):
         'selection_count': selected_artwork.count(),
         'already_selected': already_selected,
         'too_many_selected': request.session.get('too_many_selected', False),
-        'is_artwork_page': True
+        'is_artwork_page': True,
+        'selection_lower_bound': settings.SELECTION_LOWER_BOUND
     }
 
     # fetch the top 5 most similar artworks to this one, if the context is the focus group
@@ -312,18 +315,25 @@ def handle_render_home_page(request):
 
     if user_condition.current_context == 'initial':
         # get the artworks if they're stored in the cache
-        artworks = cache.get('artworks')
+        # artworks = cache.get('artworks')
+        artworks = request.session.get('artworks')
+        print('initial context; artworks', artworks)
 
         # if there aren't any stored artworks, i.e., the first the user joins
         if artworks is None:
+            print('the artworks are none')
             # get the artworks that are in the initial set and randomise
             artworks = Artwork.objects.filter(art_id__in = settings.INITIAL_ARTWORKS).order_by('?')
 
             # store them in the cache, without a timeout.
-            cache.set('artworks', artworks, timeout = None)
+            # cache.set('artworks', artworks, timeout = None)
+            request.session['artworks'] = [a.art_id for a in artworks]
+            # request.session['artworks'] = artworks
+            print('request initial artworks', request.session.get('artworks'))
 
             # also store in the session what the current context is (to check later)
-            cache.set('current_context', user_condition.current_context, timeout = None)
+            # cache.set('current_context', user_condition.current_context, timeout = None)
+            request.session['current_context'] = user_condition.current_context
 
         # if show_instructions is not in the session context, then they've not seen it yet.
         if 'show_instructions' not in request.session:
@@ -337,8 +347,10 @@ def handle_render_home_page(request):
         # when the page is refreshed
 
         # get the artworks and current context
-        artworks = cache.get('artworks')
-        cached_current_context = cache.get('current_context')
+        # artworks = cache.get('artworks')
+        # cached_current_context = cache.get('current_context')
+        artworks = request.session.get('artworks')
+        cached_current_context = request.session.get('current_context')
 
         # if the cached current context is not random, then the user is entering a new condition
         if cached_current_context != 'random':
@@ -354,16 +366,21 @@ def handle_render_home_page(request):
                 )
 
             # update the artwork and current context in the cache
-            cache.set('artworks', artworks, timeout = None)
-            cache.set('current_context', 'random', timeout = None)
+            # cache.set('artworks', artworks, timeout = None)
+            # cache.set('current_context', 'random', timeout = None)
+            request.session['artworks'] = [a.art_id for a in artworks]
+            # request.session['artworks'] = artworks
+            request.session['current_context'] = 'random'
             
             # add the current step into the cache to keep track
-            cache.set('current_step', 1, timeout = None)
+            # cache.set('current_step', 1, timeout = None)
+            request.session['current_step'] = 1
 
         print('CURRENT STEP', user_condition.current_step)
 
         # if these aren't equal, then it means that hte user has moved along into another step 
-        if cache.get('current_step') != user_condition.current_step:
+        # if cache.get('current_step') != user_condition.current_step:
+        if request.session.get('current_step') != user_condition.current_step:
             # get the selected artworks from the 'initial' step
             selected_artworks_initial = [
                 s_a.selected_artwork.art_id 
@@ -391,14 +408,19 @@ def handle_render_home_page(request):
             ).order_by('?')[:30]
 
             # update the cache 
-            cache.set('artworks', artworks, timeout = None)
-            cache.set('current_step', cache.get('current_step') + 1, timeout = None)
+            # cache.set('artworks', artworks, timeout = None)
+            # cache.set('current_step', cache.get('current_step') + 1, timeout = None)
+            request.session['artworks'] = [a.art_id for a in artworks]
+            # request.session['artworks'] = artworks
+            request.session['current_step'] = request.session.get('current_step') + 1
     else:
         assert user_condition.current_context == 'model'
 
         # get the artworks and current context 
-        artworks = cache.get('artworks')
-        cached_current_context = cache.get('current_context')
+        # artworks = cache.get('artworks')
+        # cached_current_context = cache.get('current_context')
+        artworks = request.session.get('artworks')
+        cached_current_context = request.session.get('current_context')
 
         # if the cached current context is not model, then the user is entering this condition
         # for the first time.
@@ -433,13 +455,18 @@ def handle_render_home_page(request):
                 )
             
             # update the artwork and current context in the cache
-            cache.set('artworks', artworks, timeout = None)
-            cache.set('current_context', 'model', timeout = None)
+            # cache.set('artworks', artworks, timeout = None)
+            # cache.set('current_context', 'model', timeout = None)
+            request.session['artworks'] = [a.art_id for a in artworks]
+            # request.session['artworks'] = artworks
+            request.session['current_context'] = 'model'
 
             # add the current step into the cache to keep track
-            cache.set('current_step', 1, timeout = None)
+            # cache.set('current_step', 1, timeout = None)
+            request.session['current_step'] = 1
 
-        if cache.get('current_step') != user_condition.current_step:
+        # if cache.get('current_step') != user_condition.current_step:
+        if request.session.get('current_step') != user_condition.current_step:
             # get the selected artworks from the 'initial' step
             selected_artworks_initial = [
                 s_a.selected_artwork
@@ -480,13 +507,29 @@ def handle_render_home_page(request):
                     user = user, 
                     recommended_artwork = art, 
                     recommendation_context = 'model',
-                    recommended_step = cache.get('current_step') + 1
+                    # recommended_step = cache.get('current_step') + 1
+                    recommended_step = request.session.get('current_step') + 1
                 )
 
             # update the cache
-            cache.set('artworks', artworks, timeout = None)
-            cache.set('current_step', cache.get('current_step') + 1, timeout = None)
+            # cache.set('artworks', artworks, timeout = None)
+            # cache.set('current_step', cache.get('current_step') + 1, timeout = None)
+            request.session['artworks'] = [a.art_id for a in artworks]
+            # request.session['artworks'] = artworks
+            request.session['current_step'] = request.session.get('current_step') + 1
  
+    # using the list of artwork ids, fetch the actual objects
+
+    print('artwork ids', artworks)
+    print(type(artworks))
+    artworks = [
+        Artwork.objects.get(art_id = art_id) 
+        for art_id in artworks
+    ]
+    # artworks = list(Artwork.objects.filter(art_id__in = artworks))
+    print(type(artworks))
+    print('artwork objects', artworks)
+
     # convert the artist list
     for art in artworks:
         if art.artist:
@@ -502,11 +545,12 @@ def handle_render_home_page(request):
         else:
             art.artist = 'unknown artist'
 
-    if cache.get('current_step'):
-        print('current step', cache.get('current_step'))
+    if request.session.get('current_step'):
+        print('current step', request.session.get('current_step'))
         selected_artwork = ArtworkSelected.objects.filter(
             user = user, selection_context = user_condition.current_context, 
-            step_selected = cache.get('current_step')
+            # step_selected = cache.get('current_step')
+            step_selected = request.session.get('current_step')
         )
         print('number of selected artworks', selected_artwork.count())
     else:
@@ -558,12 +602,14 @@ def selected_artwork(request):
             timestamp = timezone.now()
 
             if form.cleaned_data['selection_button'] == 'Select':
-                current_step = -1 if not cache.get('current_step') else cache.get('current_step')
+                # current_step = -1 if not cache.get('current_step') else cache.get('current_step')
+                current_step = -1 if not request.session.get('current_step') else request.session.get('current_step')
 
                 # get the number of artworks that the user has already selected
                 number_selected = ArtworkSelected.objects.filter(
                     user = user, selection_context = user_condition.current_context, 
-                    step_selected = cache.get('current_step')
+                    # step_selected = cache.get('current_step')
+                    step_selected = request.session.get('current_step')
                 ).count()
 
                 # if the number of selected artworks is greater than the upper bound
@@ -571,14 +617,16 @@ def selected_artwork(request):
                     request.session['too_many_selected'] = True
                     return redirect('museum_site:artwork', artwork_id = artwork.art_id)
 
-                current_step = cache.get('current_step')
+                # current_step = cache.get('current_step')
+                current_step = request.session.get('current_step')
 
                 # save that the user has selected the artwork
                 ArtworkSelected.objects.create(
                     user = user, 
                     selected_artwork = artwork,
                     selection_context = user_condition.current_context, 
-                    step_selected = -1 if not cache.get('current_step') else cache.get('current_step'),
+                    # step_selected = -1 if not cache.get('current_step') else cache.get('current_step'),
+                    step_selected = -1 if not request.session.get('current_step') else request.session.get('current_step'),
                     timestamp = timestamp
                 )
 
@@ -618,7 +666,8 @@ def transition_study_stage(request):
             user_condition = UserCondition.objects.get(user = user)
             selection_count = ArtworkSelected.objects.filter(
                 user = user, selection_context = user_condition.current_context, 
-                step_selected = -1 if not cache.get('current_step') else cache.get('current_step')
+                # step_selected = -1 if not cache.get('current_step') else cache.get('current_step')
+                step_selected = -1 if not request.session.get('current_step') else request.session.get('current_step')
             ).count()
 
             # print('current user condition:', user_condition.current_context)
