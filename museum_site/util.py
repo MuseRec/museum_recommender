@@ -42,4 +42,5 @@ def get_condition():
     return _random_selector_conditions_and_order(name = 'condition')
 
 def get_order():
-    return _random_selector_conditions_and_order(name = 'order')
+    # return _random_selector_conditions_and_order(name = 'order')
+    return 'model'

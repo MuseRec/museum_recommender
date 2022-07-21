@@ -494,46 +494,27 @@ def handle_render_home_page(request):
             # the recommendation part 
             # 1) get the similar artworks based on those selected in the previous step 
             # 2) exluded those that the user has previously selected (in all other steps)
-            # 3) order by the score (descending), and take the top 30
+            # 3) order by the score (descending)
             artworks = Similarities.objects.filter(
                 representation = model_condition, art__in = selected_artworks_previous_step
             ).exclude(
                 similar_art__in = selected_artworks_all_other_steps
-            ).order_by('-score')[:30]
+            ).exclude(
+                similar_art__in = selected_artworks_previous_step
+            ).order_by('-score')
 
-            # # get the selected artworks from the 'initial' step
-            # selected_artworks_initial = [
-            #     s_a.selected_artwork
-            #     for s_a in ArtworkSelected.objects.filter(
-            #         user = user, selection_context = 'initial'
-            #     )
-            # ]
+            # artworks = [s_a.similar_art for s_a in artworks]
 
-            # # get the artworks that the user has selected in this condition
-            # selected_artworks_condition = [
-            #     s_a.selected_artwork 
-            #     for s_a in ArtworkSelected.objects.filter(
-            #         user = user, selection_context = 'model'
-            #     )
-            # ]
-
-            # print('selected artworks', [s_a.title for s_a in selected_artworks_condition])
-
-            # # get the model condition that the user should be seeing (meta, image, or concat)
-            # model_condition = DataRepresentation.objects.get(source = user_condition.condition)
-
-            # # the recommendation part
-            # # 1) get the similar artworks based on those selected and the representation
-            # # 2) exclude those that the user has selected as part of the this condition 
-            # # 3) order by the score (descending), and take the top 30
-            # artworks = Similarities.objects.filter(
-            #     representation = model_condition, art__in = selected_artworks_initial
-            # ).exclude(
-            #     similar_art__in = selected_artworks_condition
-            # ).order_by('-score')[:30]
-
-            # get the artworks themselves
-            artworks = [s_a.similar_art for s_a in artworks]
+            seen_set = set()
+            no_duplicates = []
+            for art in artworks:
+                if art.similar_art.art_id in seen_set:
+                    continue 
+                else:
+                    seen_set.add(art.similar_art.art_id)
+                    no_duplicates.append(art.similar_art)
+            
+            artworks = no_duplicates[:30]
 
             # save the artworks, with the user, condition, and step in the database
             for art in artworks:
@@ -554,15 +535,10 @@ def handle_render_home_page(request):
  
     # using the list of artwork ids, fetch the actual objects
 
-    print('artwork ids', artworks)
-    print(type(artworks))
     artworks = [
         Artwork.objects.get(art_id = art_id) 
         for art_id in artworks
     ]
-    # artworks = list(Artwork.objects.filter(art_id__in = artworks))
-    print(type(artworks))
-    print('artwork objects', artworks)
 
     # convert the artist list
     for art in artworks:
