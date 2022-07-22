@@ -153,7 +153,7 @@ class PostStudyGeneralForm(ModelForm):
             'trust_two': 'I trust the system I have just used:',
             'trust_three': 'Technology should always be explainable:',
             'trust_four': 'I am not fussed about how things work in the background as long as the technology works:',
-            'trust_five': 'I am generally questioning what happens to my personal data:',
+            'trust_five': 'I generally question what happens to my personal data:',
             'relevant_one': 'I prefer a classic keyword search compared to this system:',
             'relevant_two': 'The system is not suitable to display artworks:',
             'relevant_three': 'Museum online collections are generally boring:',
