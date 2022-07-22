@@ -654,7 +654,10 @@ def selected_artwork(request):
                 assert form.cleaned_data['selection_button'] == 'Deselect'
 
                 # delete the record from the database
-                ArtworkSelected.objects.filter(user = user, selected_artwork = artwork).delete()
+                ArtworkSelected.objects.filter(
+                    user = user, selected_artwork = artwork, 
+                    step_selected = -1 if not request.session.get('current_step') else request.session.get('current_step')
+                ).delete()
 
                 # save it as an interaction event 
                 Interaction.objects.create(
