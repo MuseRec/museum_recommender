@@ -97,8 +97,6 @@ def handle_information_sheet_post(request):
 
         cleaned_data = consent_form.clean()
 
-        print('cleaned_data', cleaned_data)
-
         # generate the user_id 
         new_user.user_id = str(uuid.uuid4())
         if not "user_id" in request.session:
@@ -154,11 +152,6 @@ def handle_demographic_post(request):
         new_demo.submission_timestamp = timezone.now()
         
         new_demo.save()
-
-        # return render(request, 'museum_site/index.html', {
-        #     'provided_consent': True, 'page_id': 'index'
-        # })
-        # return handle_render_home_page(request)
 
         domain_form = DomainKnowledgeForm()
 
@@ -234,18 +227,7 @@ def artwork(request, artwork_id):
             user = user, selection_context = user_condition.current_context
         )
         selection_count = selected_artwork.count()
-    # get the artwork that the user has selected
-    # if cache.get('current_step'):
-    #     selected_artwork = ArtworkSelected.objects.filter(
-    #         user = user, selection_context = user_condition.current_context, 
-    #         current_step = cache.get('current_step')
-    #     )
-    # else:
-    # selected_artwork = ArtworkSelected.objects.filter(
-    #     user = user, selection_context = user_condition.current_context
-    # )
-    # print('selected artwork', selected_artwork.count())
-    # if cache.get('current_step'):
+
     if request.session.get('current_step'):
         selected_artwork = ArtworkSelected.objects.filter(
             user = user, selection_context = user_condition.current_context, 
@@ -261,6 +243,21 @@ def artwork(request, artwork_id):
     # get the artworks that the user has already selected (to grey out the button)
     already_selected = {art.selected_artwork.art_id for art in selected_artwork}
 
+    # if it's true
+    #   we want to set a variable to reflect that
+    #   but if the count is now lower than the upper bound
+    #   then set the variable AND session variable to False
+
+    # here we check if too_many_selected is True 
+    too_many = False
+    if request.session.get('too_many_selected') == True: 
+        too_many = True 
+        # we want to check if the selection count is gone below the upper bound
+        # if it has, then set this back to false
+        if selected_artwork.count() < settings.SELECTION_UPPER_BOUND:
+            request.session['too_many_selected'] == False
+            too_many = False  
+
     context = {
         'provided_consent': True, 'page_id': 'art_' + artwork_id,
         'artwork': art,
@@ -269,7 +266,8 @@ def artwork(request, artwork_id):
         'study_context': settings.CONTEXT,
         'selection_count': selected_artwork.count(),
         'already_selected': already_selected,
-        'too_many_selected': request.session.get('too_many_selected', False),
+        # 'too_many_selected': request.session.get('too_many_selected', False),
+        'too_many_selected': too_many,
         'is_artwork_page': True
     }
 
@@ -626,7 +624,7 @@ def selected_artwork(request):
                     step_selected = request.session.get('current_step')
                 ).count()
 
-                # if the number of selected artworks is greater than the upper bound
+                # if the number of selected is equal to the upper bound.
                 if number_selected >= settings.SELECTION_UPPER_BOUND:
                     request.session['too_many_selected'] = True
                     return redirect('museum_site:artwork', artwork_id = artwork.art_id)

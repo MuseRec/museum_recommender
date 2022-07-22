@@ -37,7 +37,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 #DEBUG = os.getenv('DEBUG')
-DEBUG = False
+DEBUG = True
 
 
 ALLOWED_HOSTS = ['127.0.0.1','10.99.96.155', '130.88..36.13', 'artdatastudy.its.manchester.ac.uk',]
@@ -66,7 +66,7 @@ if CONTEXT == 'user':
         'ACC_ACC_ACC1_1947-001', 'HSW_DMAG_1976_94-001', 'ACC_ACC_AC_5490-001',
         'NOT_NSDC_36_70-001', 'ACC_ACC_AC_1370-001', 'NG_NG_NG1079-001',
     ]
-    NUMBER_OF_STEPS = 5
+    NUMBER_OF_STEPS = 3
 
 # Application definition
 INSTALLED_APPS = [
