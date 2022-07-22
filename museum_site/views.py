@@ -97,6 +97,8 @@ def handle_information_sheet_post(request):
 
         cleaned_data = consent_form.clean()
 
+        print('cleaned_data', cleaned_data)
+
         # generate the user_id 
         new_user.user_id = str(uuid.uuid4())
         if not "user_id" in request.session:
@@ -114,9 +116,6 @@ def handle_information_sheet_post(request):
         condition = get_condition()
         order = get_order()
 
-        print('condition', condition)
-        print('order', order)
-
         UserCondition.objects.create(
             user = new_user, 
             condition = condition,
@@ -132,6 +131,11 @@ def handle_information_sheet_post(request):
         return render(request, "museum_site/index.html", {
             'provided_consent': True, 'demographic_form': demographic_form,
             'load_demographic': True, 'study_context': settings.CONTEXT
+        })
+    else:
+        return render(request, 'museum_site/index.html', {
+            'provided_consent': False, 'consent_form': consent_form, 
+            'study_context': settings.CONTEXT
         })
 
 
