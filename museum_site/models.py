@@ -97,6 +97,9 @@ class User(models.Model):
     # when was the user object created
     user_created = models.DateTimeField()
 
+    # a signal for whether the user was recruited via prolific
+    prolific = models.BooleanField(default = False)
+
     def __str__(self):
         """
             Overridden function to format the user when printing

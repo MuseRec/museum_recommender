@@ -5,6 +5,7 @@ from . import views
 app_name = "museum_site"
 urlpatterns = [
     path('', views.index, name='index'),
+    path('<str:prolific_id>', views.index, name = 'index'),
     path('artwork/<str:artwork_id>/', views.artwork, name='artwork'),
     path('rating/', views.save_rating, name='rating'),
     path('selected/', views.selected_artwork, name = 'selected'),
