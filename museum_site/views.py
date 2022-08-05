@@ -25,10 +25,10 @@ from collector.models import Interaction
 from recommendations.models import Similarities, DataRepresentation
 from .util import get_condition, get_order
 
-def index(request):
+def index(request, prolific_id = None):
     if (request.method == 'POST') and (settings.CONTEXT == 'user'):
         if 'information_sheet_form' in request.POST:
-            return handle_information_sheet_post(request)
+            return handle_information_sheet_post(request, prolific_id)
         elif 'demographic_form' in request.POST:
             # check that the user has provided consent in the prior step before
             # progressing with collecting their data
@@ -90,7 +90,7 @@ def index(request):
         })
 
 
-def handle_information_sheet_post(request):
+def handle_information_sheet_post(request, prolific_id = None):
     consent_form = UserForm(request.POST)
     if consent_form.is_valid():
         new_user = consent_form.save(commit = False)
@@ -106,6 +106,10 @@ def handle_information_sheet_post(request):
         if cleaned_data['contact_outcome']:
             new_user.email = cleaned_data['email']
             new_user.contact_outcome = True
+
+        # if that ID is present
+        if prolific_id == 'prolific':
+            new_user.prolific = True 
         
         new_user.user_created = timezone.now()
         new_user.save()
@@ -823,7 +827,10 @@ def post_study(request, which_form):
             })
 
 def thank_you(request):
-    return render(request, 'museum_site/thankyou.html')
+    user = User.objects.get(user_id = request.session['user_id'])
+    return render(request, 'museum_site/thankyou.html', context = {
+        'prolific': True if user.prolific else False
+    })
 
 @ensure_csrf_cookie
 def save_rating(request):
