@@ -1,26 +1,6 @@
-{
-    "description": "<p>This is the code to run the recommender system web app built for the thesis \"Artificial Intelligence, Museum Environments and their Constituents: A Cross-disciplinary Study Using a Recommender System to Explore Digital Collections\"</p>", 
-    "license": "other-open", 
-    "title": "MuseRec/museum_recommender: MuseRec System Release", 
-    "version": "MuseRec_systemv1.0", 
-    "upload_type": "software", 
-    "publication_date": "2022-09-28", 
+{ 
     "creators": [
         {
             "name": "Lukas Hughes-Noehrer"
         }
-    ], 
-    "access_right": "open", 
-    "related_identifiers": [
-        {
-            "scheme": "url", 
-            "identifier": "https://github.com/MuseRec/museum_recommender/tree/MuseRec_systemv1.0", 
-            "relation": "isSupplementTo"
-        }, 
-        {
-            "scheme": "doi", 
-            "identifier": "10.5281/zenodo.7120678", 
-            "relation": "isVersionOf"
-        }
-    ]
 }
